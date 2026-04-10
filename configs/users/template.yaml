@@ -1,0 +1,25 @@
+# TEMPLATE — copy this file to create your own user config
+# Example:
+# cp configs/users/template.yaml configs/users/<your_name>.yaml
+
+user:
+  name: your_name
+
+aws:
+  region: us-east-1
+  s3_bucket: your-s3-bucket-name
+  bronze_prefix: bronze/isd
+  silver_prefix: silver/weather
+  gold_prefix: gold/wind
+  models_prefix: models
+  forecasts_prefix: forecasts
+  benchmarks_prefix: benchmarks
+
+runtime:
+  local_data_root: /path/to/local/data
+  local_output_root: /path/to/project/outputs
+
+ec2:
+  spark_master_url: spark://your-master-node:7077
+  ssh_host: your-ec2-host
+  ssh_user: ubuntu

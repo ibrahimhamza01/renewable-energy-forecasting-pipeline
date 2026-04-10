@@ -1,0 +1,32 @@
+# Logical path definitions
+# These are NOT real paths — they are abstract names
+# They will be resolved using user config + runtime config
+
+data:
+  raw_isd: "raw/isd"
+
+bronze:
+  isd: "bronze/isd"
+
+silver:
+  weather: "silver/weather"
+
+gold:
+  wind_station_hourly: "gold/wind/station/hourly"
+  wind_station_daily: "gold/wind/station/daily"
+  wind_region_daily: "gold/wind/region/daily"
+  wind_region_monthly: "gold/wind/region/monthly"
+
+models:
+  registry: "models"
+
+forecasts:
+  outputs: "forecasts"
+
+benchmarks:
+  results: "benchmarks"
+
+outputs:
+  figures: "outputs/figures"
+  metrics: "outputs/metrics"
+  sample_runs: "outputs/sample_runs"

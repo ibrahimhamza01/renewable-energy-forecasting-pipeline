@@ -1,0 +1,26 @@
+project:
+  name: renewable-energy-forecasting-pipeline
+  domain: wind-energy-forecasting
+  version: "0.1.0"
+  stage: development
+
+dataset:
+  source_name: noaa_isd
+  geographic_scope: contiguous_us
+  focus: wind_only
+
+team:
+  members:
+    - syed
+    - ege
+    - alejandro
+
+execution:
+  default_engine: spark
+  local_mode_enabled: true
+  cloud_mode_enabled: true
+
+standards:
+  use_hardcoded_paths: false
+  use_user_override_config: true
+  required_env_var: PROJECT_USER_CONFIG

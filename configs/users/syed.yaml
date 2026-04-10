@@ -1,0 +1,21 @@
+user:
+  name: syed
+
+aws:
+  region: us-east-1
+  s3_bucket: REPLACE_ME
+  bronze_prefix: bronze/isd
+  silver_prefix: silver/weather
+  gold_prefix: gold/wind
+  models_prefix: models
+  forecasts_prefix: forecasts
+  benchmarks_prefix: benchmarks
+
+runtime:
+  local_data_root: /REPLACE/ME/local-data
+  local_output_root: /REPLACE/ME/project-outputs
+
+ec2:
+  spark_master_url: local[*]
+  ssh_host: REPLACE_ME
+  ssh_user: ubuntu

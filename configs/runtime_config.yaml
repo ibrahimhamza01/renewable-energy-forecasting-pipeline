@@ -1,0 +1,19 @@
+runtime:
+  environment: development
+  log_level: INFO
+  temp_dir: ".tmp"
+  timezone: "UTC"
+
+execution:
+  run_mode: local
+  fail_fast: true
+  write_mode: overwrite
+
+data_processing:
+  default_partition_count: 8
+  sample_limit: 10000
+  cache_intermediate_results: false
+
+validation:
+  enable_schema_checks: true
+  enable_data_quality_checks: true
