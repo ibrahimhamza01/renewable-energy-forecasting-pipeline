@@ -1,0 +1,167 @@
+{
+  "dataset": "NOAA ISD Global Hourly",
+  "layer": "raw",
+  "description": "Core raw NOAA ISD columns selected for the wind-focused v1 pipeline.",
+  "grain": "One timestamped weather observation row from a station-year CSV file.",
+  "file_organization": {
+    "pattern": "year/station.csv",
+    "notes": [
+      "Each file represents one station-year.",
+      "Rows are timestamped observations.",
+      "Observed sample years: 2019, 2022, 2025."
+    ]
+  },
+  "core_columns": [
+    {
+      "name": "STATION",
+      "type": "string",
+      "required": true,
+      "description": "Station identifier."
+    },
+    {
+      "name": "DATE",
+      "type": "string",
+      "required": true,
+      "description": "Observation timestamp in ISO-like string format."
+    },
+    {
+      "name": "SOURCE",
+      "type": "string",
+      "required": true,
+      "description": "Observation source code."
+    },
+    {
+      "name": "LATITUDE",
+      "type": "float",
+      "required": true,
+      "description": "Station latitude."
+    },
+    {
+      "name": "LONGITUDE",
+      "type": "float",
+      "required": true,
+      "description": "Station longitude."
+    },
+    {
+      "name": "ELEVATION",
+      "type": "float",
+      "required": true,
+      "description": "Station elevation."
+    },
+    {
+      "name": "NAME",
+      "type": "string",
+      "required": true,
+      "description": "Station display name."
+    },
+    {
+      "name": "REPORT_TYPE",
+      "type": "string",
+      "required": true,
+      "description": "Report type code."
+    },
+    {
+      "name": "QUALITY_CONTROL",
+      "type": "string",
+      "required": true,
+      "description": "Top-level quality control code."
+    },
+    {
+      "name": "WND",
+      "type": "string",
+      "required": true,
+      "description": "Encoded wind field."
+    },
+    {
+      "name": "CIG",
+      "type": "string",
+      "required": true,
+      "description": "Encoded ceiling height field."
+    },
+    {
+      "name": "VIS",
+      "type": "string",
+      "required": true,
+      "description": "Encoded visibility field."
+    },
+    {
+      "name": "TMP",
+      "type": "string",
+      "required": true,
+      "description": "Encoded air temperature field."
+    },
+    {
+      "name": "DEW",
+      "type": "string",
+      "required": true,
+      "description": "Encoded dew point field."
+    },
+    {
+      "name": "SLP",
+      "type": "string",
+      "required": true,
+      "description": "Encoded sea level pressure field."
+    }
+  ],
+  "secondary_columns": [
+    {
+      "name": "CALL_SIGN",
+      "type": "string",
+      "required": false,
+      "description": "Optional station call sign."
+    },
+    {
+      "name": "REM",
+      "type": "string",
+      "required": false,
+      "description": "Optional remarks/free-text-like field; not part of core v1 processing."
+    }
+  ],
+  "out_of_scope_for_v1": {
+    "column_prefixes": [
+      "AA",
+      "AB",
+      "AE",
+      "AO",
+      "CF",
+      "CG",
+      "CH",
+      "CN",
+      "CO",
+      "CR",
+      "CT",
+      "CU",
+      "CV",
+      "CW",
+      "KA",
+      "KB",
+      "KC",
+      "KD",
+      "KE",
+      "KF",
+      "OB"
+    ],
+    "reason": "Wide optional encoded fields are sparse, inconsistent across stations, or not required for the wind-only v1 project scope."
+  },
+  "known_encoding_notes": {
+    "WND": "Observed pattern resembles direction,direction_qc,type,speed,speed_qc",
+    "TMP": "Observed pattern resembles temperature,temperature_qc",
+    "DEW": "Observed pattern resembles dew_point_qc pair",
+    "SLP": "Observed pattern resembles pressure,pressure_qc",
+    "general_rule": "Encoded string fields must be parsed before analysis."
+  },
+  "missing_value_notes": {
+    "common_sentinels": [
+      "9999",
+      "+9999",
+      "99999",
+      "999999"
+    ],
+    "quality_flag_note": "QC code 9 was observed with missing/invalid values and should be treated as unreliable until parser/cleaning rules formalize allowed QC values."
+  },
+  "project_scope_statement": {
+    "primary_target": "wind",
+    "secondary_fields": "auxiliary weather fields are secondary",
+    "solar": "out_of_scope"
+  }
+}
