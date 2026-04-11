@@ -19,35 +19,40 @@ Designed for **big data processing with PySpark**, **config-driven cloud executi
 ## Dataset: NOAA Integrated Surface Database (ISD)
 
 - Source: NOAA ISD (AWS Open Data)
-- Format: CSV (compressed, wide schema)
+- Format: CSV (wide schema with encoded fields)
 - Scale: 600GB+ uncompressed
 - Coverage:
   - Global stations (~35,000)
   - Hourly observations
-  - Years: 1901–2025 (we use 1995–2025 subset)
-- Key fields used:
-  - `WND` → wind speed & direction (core for this project)
-  - `TMP` → temperature
-  - `DEW` → dew point
-  - `VIS` → visibility
-  - `CIG` → ceiling
-  - `SLP` → pressure
-  - `DATE` → **true timestamp (used for all time logic)**
+  - Years: 1901–2025 (project subset: 1995–2025)
 
-Important:
+### Key Fields Used
+
+- `WND` → wind speed & direction (**primary target**)
+- `TMP` → temperature
+- `DEW` → dew point
+- `VIS` → visibility
+- `CIG` → ceiling
+- `SLP` → pressure
+- `DATE` → **true timestamp (used for all time logic)**
+
+### Important Notes
+
 - S3 file timestamps are **NOT data timestamps**
 - Always use the `DATE` column for time-based analysis
+- Many fields are **encoded strings** and require parsing
+- Dataset is **wide and sparse** (many optional columns ignored in v1)
 
 ---
 
 ## Tech Stack
 
-- **Python** (managed with `uv`)
+- **Python (uv-managed environment)**
 - **PySpark** (distributed processing)
 - **DuckDB** (single-node benchmarking)
 - **Pandas / NumPy**
 - **PyArrow**
-- **AWS** (S3, EC2)
+- **AWS (S3, EC2)**
 - **Airflow** (pipeline orchestration, later stage)
 - **Datashader / Plotly** (visualization)
 
@@ -116,7 +121,7 @@ This project is **fully config-driven** to support multiple teammates with diffe
 
 ---
 
-## Configuration layers
+## Configuration Layers
 
 ### 1. Shared config (`configs/`)
 
@@ -176,18 +181,18 @@ PROJECT_USER_CONFIG=configs/users/syed.yaml
 
 ---
 
-## Mental model
+## Mental Model
 
 | File                        | Purpose                                    |
 | --------------------------- | ------------------------------------------ |
-| `configs/paths.yaml`        | Defines logical paths (bronze/silver/gold) |
+| `configs/paths.yaml`        | Logical dataset paths (bronze/silver/gold) |
 | `configs/spark_config.yaml` | Spark tuning                               |
-| `configs/users/*.yaml`      | Your AWS + EC2 + local setup               |
-| `.env`                      | Which user config to load                  |
+| `configs/users/*.yaml`      | User-specific AWS + EC2 + local setup      |
+| `.env`                      | Active user config selection               |
 
 ---
 
-## Example (how paths work)
+## Example (Path Resolution)
 
 ### Shared config:
 
@@ -225,41 +230,40 @@ Follow this cycle for every layer:
 
 ## Pipeline Overview
 
-High-level architecture:
-
 1. **Ingestion**
 
-   * Read NOAA ISD CSV data from S3
+   * Read NOAA ISD CSV data
 
 2. **Parsing**
 
-   * Decode fields like `WND`, `TMP`, `VIS`
+   * Decode encoded fields (`WND`, `TMP`, etc.)
 
 3. **Cleaning**
 
    * Apply QC rules
-   * Standardize units (wind → m/s)
+   * Handle sentinel values (e.g., 9999)
+   * Standardize units
 
 4. **Storage**
 
    * Bronze → raw structured
    * Silver → cleaned + enriched
-   * Gold → wind energy datasets
+   * Gold → wind datasets
 
 5. **Wind Modeling**
 
    * Apply turbine power curve
-   * Generate wind potential indices
+   * Compute wind potential
 
 6. **Feature Engineering**
 
    * Lag features
    * Rolling statistics
-   * Temporal signals
+   * Temporal features
 
 7. **Machine Learning**
 
-   * Regression models (LR, RF, GBT)
+   * Train regression models
    * Predict wind potential
 
 8. **Forecasting**
@@ -267,9 +271,9 @@ High-level architecture:
    * Batch predictions
    * Versioned outputs
 
-9. **Orchestration (Airflow)**
+9. **Orchestration**
 
-   * End-to-end automated pipeline
+   * Airflow DAGs
 
 ---
 
@@ -291,12 +295,18 @@ High-level architecture:
 
 ## Current Status
 
-**Layer 0 — Project Foundation (in progress)**
+### Layer 0 — Project Foundation ✅
 
 * [x] Repo structure
 * [x] uv environment
-* [ ] Config system (in progress)
-* [ ] Data contracts
+* [x] Config design (in progress)
+* [x] Data contracts (initial)
+
+### Layer 1 — Dataset Understanding 🔄
+
+* [x] Part A: NOAA ISD inspection + schema definition
+* [ ] Part B: Station metadata + US filtering
+* [ ] Part C: Development subset decision
 
 ---
 
@@ -304,7 +314,7 @@ High-level architecture:
 
 * All paths must come from config
 * Code must be environment-agnostic
-* Always use `DATE` column for time
+* Always use `DATE` for time logic
 * Never rely on S3 file timestamps
 * Validate locally before scaling
 
@@ -316,6 +326,9 @@ This project is designed to mimic a **real-world production data pipeline**:
 
 * Distributed processing (Spark)
 * Cloud-native storage (S3)
-* Reproducibility via config
-* Automated orchestration (Airflow)
-* Model versioning and batch inference
+* Config-driven reproducibility
+* Orchestrated workflows (Airflow)
+* ML model lifecycle and forecasting
+
+---
+
