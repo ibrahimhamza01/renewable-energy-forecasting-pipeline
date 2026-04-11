@@ -242,6 +242,5 @@ ML Models → Forecasts
 - Implement parsing logic for encoded fields
 - Build Spark ingestion pipeline
 - Develop cleaning and QC enforcement
-```
 
 ---
