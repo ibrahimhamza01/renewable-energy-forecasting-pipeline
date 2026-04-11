@@ -305,8 +305,22 @@ Follow this cycle for every layer:
 ### Layer 1 — Dataset Understanding 🔄
 
 * [x] Part A: NOAA ISD inspection + schema definition
-* [ ] Part B: Station metadata + US filtering
+* [x] Part B: Station metadata + contiguous US filtering
 * [ ] Part C: Development subset decision
+
+#### Part B Output
+
+* Built station metadata pipeline using NOAA `isd-history.csv`
+* Created **contiguous U.S. station master (~5.8k–6.2k stations)**
+* Filtering included:
+
+  * U.S. stations only
+  * valid coordinates
+  * exclusion of Alaska, Hawaii, and territories
+  * geographic bounding box
+  * removal of missing state entries
+* Verified geographic distribution and temporal coverage
+* Identified ~4,900 stations active in 1995–2025 window
 
 ---
 
@@ -331,4 +345,5 @@ This project is designed to mimic a **real-world production data pipeline**:
 * ML model lifecycle and forecasting
 
 ---
+
 
