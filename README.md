@@ -24,11 +24,20 @@ Designed for **big data processing with PySpark**, **config-driven cloud executi
 - Coverage:
   - Global stations (~35,000)
   - Hourly observations
-  - Years: 1901–2025 (project subset: 1995–2025)
+  - Years: 1901–2025
 
-### Key Fields Used
+### Project Scope
 
-- `WND` → wind speed & direction (**primary target**)
+- Geographic scope: **contiguous U.S.**
+- Large-scale project window: **1995–2025**
+- Local development subset:
+  - states: **CA, TX, MN, FL**
+  - years: **2018–2020**
+  - target size: **~150 stations**
+
+### Core Fields in Scope
+
+- `WND` → wind speed & direction (**primary target field**)
 - `TMP` → temperature
 - `DEW` → dew point
 - `VIS` → visibility
@@ -38,10 +47,13 @@ Designed for **big data processing with PySpark**, **config-driven cloud executi
 
 ### Important Notes
 
-- S3 file timestamps are **NOT data timestamps**
+- S3 file timestamps are **not** data timestamps
 - Always use the `DATE` column for time-based analysis
-- Many fields are **encoded strings** and require parsing
-- Dataset is **wide and sparse** (many optional columns ignored in v1)
+- Many weather fields are **encoded strings** and will require parsing
+- The dataset is **wide and sparse**, so many optional columns are excluded from the v1 core scope
+- Wind is the **primary modeling target**
+- Sparse auxiliary weather fields are **secondary**
+- Solar is **out of scope**
 
 ---
 
@@ -53,16 +65,15 @@ Designed for **big data processing with PySpark**, **config-driven cloud executi
 - **Pandas / NumPy**
 - **PyArrow**
 - **AWS (S3, EC2)**
-- **Airflow** (pipeline orchestration, later stage)
+- **Airflow** (planned orchestration layer)
 - **Datashader / Plotly** (visualization)
 
 ---
 
 ## Repository Structure
 
-```
-
-src/            → core pipeline code (ETL, features, ML)
+```text
+src/            → core pipeline code
 configs/        → shared + user-specific configs
 configs/users/  → per-user AWS + local settings
 data_contracts/ → schema + data definitions
@@ -70,9 +81,8 @@ infra/          → EC2, S3, Airflow setup
 notebooks/      → validation + experiments
 scripts/        → runnable entrypoints
 tests/          → unit tests
-docs/           → design + experiments
+docs/           → architecture, experiments, presentation materials
 outputs/        → generated artifacts (gitignored)
-
 ````
 
 ---
@@ -81,15 +91,16 @@ outputs/        → generated artifacts (gitignored)
 
 We use **uv** for dependency management.
 
-Do NOT use:
-- pip
-- requirements.txt
+Do **not** use:
+
+* `pip`
+* `requirements.txt`
 
 ### 1. Install dependencies
 
 ```bash
 uv sync
-````
+```
 
 ### 2. Activate environment
 
@@ -105,13 +116,11 @@ which python
 
 ---
 
-## Configuration System (CRITICAL)
+## Configuration System
 
-This project is **fully config-driven** to support multiple teammates with different AWS setups.
+This project is **config-driven** to support multiple teammates with different AWS setups.
 
----
-
-## NEVER hardcode:
+### Never hardcode
 
 * S3 bucket names
 * EC2 hostnames
@@ -119,11 +128,9 @@ This project is **fully config-driven** to support multiple teammates with diffe
 * Local directories
 * Output paths
 
----
+### Configuration layers
 
-## Configuration Layers
-
-### 1. Shared config (`configs/`)
+#### 1. Shared config (`configs/`)
 
 Defines:
 
@@ -136,83 +143,26 @@ Examples:
 * `configs/paths.yaml`
 * `configs/spark_config.yaml`
 
----
+#### 2. User config (`configs/users/<name>.yaml`)
 
-### 2. User config (`configs/users/<name>.yaml`)
+Defines personal infrastructure settings such as:
 
-Defines **your personal infrastructure**:
+* S3 bucket
+* S3 prefix
+* EC2 host
+* Spark master URL
+* local data root
 
-```yaml
-aws:
-  s3_bucket: syed-wind-project
-  s3_base_prefix: dsan6000
-
-ec2:
-  ssh_host: ec2-xx-xx.compute-1.amazonaws.com
-
-spark:
-  master_url: spark://ec2-xx-xx:7077
-
-local:
-  data_root: /home/syed/data
-```
-
-Each teammate has their own file:
-
-* `configs/users/syed.yaml`
-* `configs/users/ege.yaml`
-* `configs/users/alejandro.yaml`
-
----
-
-### 3. Active config selection
-
-Set this once:
+#### 3. Active config selection
 
 ```bash
 export PROJECT_USER_CONFIG=configs/users/syed.yaml
 ```
 
-Or inside `.env`:
+or in `.env`:
 
 ```env
 PROJECT_USER_CONFIG=configs/users/syed.yaml
-```
-
----
-
-## Mental Model
-
-| File                        | Purpose                                    |
-| --------------------------- | ------------------------------------------ |
-| `configs/paths.yaml`        | Logical dataset paths (bronze/silver/gold) |
-| `configs/spark_config.yaml` | Spark tuning                               |
-| `configs/users/*.yaml`      | User-specific AWS + EC2 + local setup      |
-| `.env`                      | Active user config selection               |
-
----
-
-## Example (Path Resolution)
-
-### Shared config:
-
-```yaml
-datasets:
-  silver_prefix: silver/weather
-```
-
-### User config:
-
-```yaml
-aws:
-  s3_bucket: syed-wind-project
-  s3_base_prefix: dsan6000
-```
-
-### Final resolved path:
-
-```
-s3://syed-wind-project/dsan6000/silver/weather
 ```
 
 ---
@@ -221,106 +171,162 @@ s3://syed-wind-project/dsan6000/silver/weather
 
 Follow this cycle for every layer:
 
-1. Build locally (small sample)
-2. Validate with tests + notebooks
-3. Run at scale on Spark (EC2 + S3)
-4. Validate outputs locally
-
----
-
-## Pipeline Overview
-
-1. **Ingestion**
-
-   * Read NOAA ISD CSV data
-
-2. **Parsing**
-
-   * Decode encoded fields (`WND`, `TMP`, etc.)
-
-3. **Cleaning**
-
-   * Apply QC rules
-   * Handle sentinel values (e.g., 9999)
-   * Standardize units
-
-4. **Storage**
-
-   * Bronze → raw structured
-   * Silver → cleaned + enriched
-   * Gold → wind datasets
-
-5. **Wind Modeling**
-
-   * Apply turbine power curve
-   * Compute wind potential
-
-6. **Feature Engineering**
-
-   * Lag features
-   * Rolling statistics
-   * Temporal features
-
-7. **Machine Learning**
-
-   * Train regression models
-   * Predict wind potential
-
-8. **Forecasting**
-
-   * Batch predictions
-   * Versioned outputs
-
-9. **Orchestration**
-
-   * Airflow DAGs
-
----
-
-## Team Structure
-
-* **Data Pipeline Lead**
-
-  * ingestion, parsing, cleaning, storage
-
-* **Platform Lead**
-
-  * config system, AWS, Airflow, runtime
-
-* **Analytics Lead**
-
-  * validation, features, ML, benchmarking
+1. Build locally on a small sample
+2. Validate with notebooks and checks
+3. Scale later to Spark (EC2 + S3)
+4. Re-validate outputs locally
 
 ---
 
 ## Current Status
 
-### Layer 0 — Project Foundation ✅
+### Layer 0 — Project Foundation (Complete)
 
-* [x] Repo structure
-* [x] uv environment
-* [x] Config design (in progress)
-* [x] Data contracts (initial)
+Completed:
 
-### Layer 1 — Dataset Understanding 🔄
+* repository structure
+* uv environment
+* config system design
+* initial data contracts
 
-* [x] Part A: NOAA ISD inspection + schema definition
-* [x] Part B: Station metadata + contiguous US filtering
-* [ ] Part C: Development subset decision
+Key outcome:
 
-#### Part B Output
+* the project now has a consistent local development setup
+* cloud-specific values are intended to be config-driven rather than hardcoded
+* the repo structure is organized for layered development
 
-* Built station metadata pipeline using NOAA `isd-history.csv`
-* Created **contiguous U.S. station master (~5.8k–6.2k stations)**
-* Filtering included:
+---
 
-  * U.S. stations only
-  * valid coordinates
-  * exclusion of Alaska, Hawaii, and territories
-  * geographic bounding box
-  * removal of missing state entries
-* Verified geographic distribution and temporal coverage
-* Identified ~4,900 stations active in 1995–2025 window
+### Layer 1 — NOAA ISD Understanding and Development Scope (Complete)
+
+Completed:
+
+* raw dataset inspection and field behavior study
+* station metadata loading and contiguous U.S. filtering
+* development subset and wind-only viability decision
+
+#### Part A — Raw dataset inspection and field behavior study
+
+Files created/updated:
+
+* `src/ingestion/discover_isd_files.py`
+* `notebooks/01_dataset_understanding.ipynb`
+* `configs/schema/isd_raw_schema.json`
+
+Main findings:
+
+* NOAA ISD CSV data is organized as **`year/station.csv`**
+* each file represents a **station-year**
+* each row is a **timestamped weather observation**
+* core encoded weather fields consistently observed:
+
+  * `WND`
+  * `CIG`
+  * `VIS`
+  * `TMP`
+  * `DEW`
+  * `SLP`
+* common sentinel and missing patterns observed:
+
+  * `9999`
+  * `+9999`
+  * `99999`
+  * `999999`
+* extra fields such as `CALL_SIGN` and `REM` were observed but treated as non-core
+* many optional encoded field families were found to be sparse or inconsistent and were excluded from the v1 core scope
+
+Key outcome:
+
+* the raw NOAA ISD row structure is understood
+* the core raw field scope is fixed
+
+#### Part B — Station metadata and contiguous U.S. scope filtering
+
+Files created/updated:
+
+* `src/ingestion/station_metadata_loader.py`
+* `src/ingestion/station_filter.py`
+* `notebooks/02_station_scope_and_coverage.ipynb`
+* `docs/architecture/data_flow.md`
+
+Main findings:
+
+* station metadata was loaded from NOAA `isd-history.csv`
+* contiguous U.S. filtering required more than `country_code = US`
+* geographic filtering and state filtering were both needed
+* stations with invalid coordinates or missing state information had to be removed
+
+Filtering summary:
+
+* total metadata stations loaded: **28,474**
+* U.S. stations: **7,074**
+* valid-coordinate U.S. stations: **7,052**
+* after excluding Alaska, Hawaii, and territories: **6,432**
+* contiguous U.S. stations: **6,225**
+* stations overlapping `1995–2025`: **4,943**
+
+Key outcome:
+
+* a clean contiguous U.S. station master was defined
+* retained station metadata includes:
+
+  * station_id
+  * latitude
+  * longitude
+  * elevation
+  * state
+  * active year range
+
+#### Part C — Development subset and viability decision for wind-only project
+
+Files created/updated:
+
+* `docs/experiments/dataset_viability.md`
+* `docs/presentation/question_map.md`
+* `notebooks/02_station_scope_and_coverage.ipynb`
+
+Main findings:
+
+* selected local development states:
+
+  * **CA**
+  * **TX**
+  * **MN**
+  * **FL**
+* station counts in selected states:
+
+  * CA: **492**
+  * TX: **490**
+  * FL: **301**
+  * MN: **204**
+* stations in selected states overlapping `1995–2025`: **1,162**
+* stations in selected states overlapping `2018–2020`: **630**
+
+Development subset decision:
+
+* local development subset:
+
+  * states: **CA, TX, MN, FL**
+  * years: **2018–2020**
+  * target size: **~150 stations**
+* large-scale project scope:
+
+  * contiguous U.S.
+  * years: **1995–2025**
+
+Modeling scope decision:
+
+* wind is the **primary** modeling focus
+* `WND` plus station metadata is sufficient to support a wind-focused project
+* `TMP`, `DEW`, `SLP`, `VIS`, and `CIG` are secondary supporting fields
+* solar is **out of scope**
+
+Key outcome:
+
+* contiguous U.S. station scope is fixed
+* core columns are fixed
+* development subset is fixed
+* wind-only direction is approved internally
 
 ---
 
@@ -336,14 +342,11 @@ Follow this cycle for every layer:
 
 ## Final Note
 
-This project is designed to mimic a **real-world production data pipeline**:
+This project is being developed as a staged, production-style data pipeline:
 
-* Distributed processing (Spark)
-* Cloud-native storage (S3)
-* Config-driven reproducibility
-* Orchestrated workflows (Airflow)
-* ML model lifecycle and forecasting
-
----
-
+* local-first validation
+* later distributed execution
+* config-driven reproducibility
+* clear scope control
+* focused wind forecasting objective
 
