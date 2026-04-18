@@ -14,11 +14,11 @@ class Paths:
 
         self._logical_paths = config.paths
 
-    def _local_path(self, relative_path: str) -> str:
+    def _local_data_path(self, relative_path: str) -> str:
         return str(self.local_data_root / relative_path)
 
-    def _output_path(self, relative_path: str) -> str:
-        return str(self.local_output_root / Path(relative_path).name)
+    def _local_output_path(self, relative_path: str) -> str:
+        return str(self.project_root / relative_path)
 
     def _s3_path(self, relative_path: str) -> str:
         return f"s3://{self.aws_bucket}/{relative_path}"
@@ -65,15 +65,27 @@ class Paths:
 
     @property
     def output_figures(self) -> str:
-        return self._output_path(self._logical_paths["outputs"]["figures"])
+        return self._local_output_path(self._logical_paths["outputs"]["figures"])
 
     @property
     def output_metrics(self) -> str:
-        return self._output_path(self._logical_paths["outputs"]["metrics"])
+        return self._local_output_path(self._logical_paths["outputs"]["metrics"])
 
     @property
     def output_sample_runs(self) -> str:
-        return self._output_path(self._logical_paths["outputs"]["sample_runs"])
+        return self._local_output_path(self._logical_paths["outputs"]["sample_runs"])
+
+    @property
+    def parsed_sample(self) -> str:
+        return self._local_output_path(self._logical_paths["outputs"]["parsed_sample"])
+
+    @property
+    def station_master_contiguous_us(self) -> str:
+        return self._local_output_path(self._logical_paths["outputs"]["station_master_contiguous_us"])
+
+    @property
+    def cleaned_enriched_sample(self) -> str:
+        return self._local_output_path(self._logical_paths["outputs"]["cleaned_enriched_sample"])
 
 
 paths = Paths()

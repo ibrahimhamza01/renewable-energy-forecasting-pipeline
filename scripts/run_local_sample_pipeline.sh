@@ -2,10 +2,12 @@
 
 set -euo pipefail
 
-APP_NAME="local-sample-parse-pipeline"
+APP_NAME="local-sample-cleaned-pipeline"
 
-echo "Starting local sample parsing pipeline..."
+echo "Starting local sample cleaned pipeline..."
 
-python -m src.parsing.run_local_sample_pipeline
+export PROJECT_USER_CONFIG="configs/users/syed.yaml"
 
-echo "Local sample parsing pipeline completed."
+python -m src.cleaning.run_local_sample_pipeline
+
+echo "Local sample cleaned pipeline completed."

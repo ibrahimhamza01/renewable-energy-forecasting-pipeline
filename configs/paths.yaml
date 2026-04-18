@@ -30,3 +30,6 @@ outputs:
   figures: "outputs/figures"
   metrics: "outputs/metrics"
   sample_runs: "outputs/sample_runs"
+  parsed_sample: "outputs/sample_runs/parsed_sample"
+  station_master_contiguous_us: "outputs/sample_runs/station_master_contiguous_us.csv"
+  cleaned_enriched_sample: "outputs/sample_runs/cleaned_enriched_sample"
