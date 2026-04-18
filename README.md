@@ -180,7 +180,7 @@ export PROJECT_USER_CONFIG=configs/users/syed.yaml
 
 ---
 
-### Layer 0 — Project Foundation ✅
+### Layer 0 — Project Foundation
 
 Completed:
 
@@ -197,7 +197,7 @@ Key outcome:
 
 ---
 
-### Layer 1 — NOAA ISD Understanding and Scope Definition ✅
+### Layer 1 — NOAA ISD Understanding and Scope Definition
 
 #### Part A — Raw dataset understanding
 
@@ -262,7 +262,7 @@ Outcome:
 
 ---
 
-### Layer 2 — Core Field Parsing Pipeline ✅
+### Layer 2 — Core Field Parsing Pipeline
 
 #### Part A — Parser implementation
 
@@ -332,6 +332,165 @@ Validation methods:
 * stable, testable parsing layer
 * reproducible local pipeline execution
 * schema finalized for downstream processing
+
+---
+
+### Layer 3 — Cleaning, QC Enforcement, Unit Standardization, Metadata Enrichment
+
+#### Goal
+
+Transform parsed weather observations into **analysis-ready data** suitable for wind energy modeling.
+
+---
+
+#### Part A — Cleaning and Unit Standardization
+
+Files implemented:
+
+* `src/cleaning/quality_filters.py`
+* `src/cleaning/standardize_units.py`
+* `src/cleaning/clean_isd.py`
+
+Key logic implemented:
+
+* QC flag filtering across all core weather fields
+* invalid value removal using domain bounds
+* sentinel-to-null handling for all measurements
+* wind speed conversion to **meters per second (m/s)**
+* temperature and dew point conversion to **°C**
+* pressure conversion to **hPa**
+* timestamp normalization → `timestamp_utc`, `date_utc`, and time components
+* basic consistency checks:
+
+  * dew point ≤ temperature
+* wind-focused usability filtering:
+
+  * `has_valid_wind_speed`
+  * `has_valid_timestamp`
+  * `is_core_row_complete`
+  * `is_wind_row_usable`
+
+Key design decisions:
+
+* strict QC enforcement (invalid values dropped, not imputed)
+* wind speed quality prioritized as primary modeling signal
+* cleaning applied before unit conversion
+* audit and diagnostic flags retained for transparency
+
+---
+
+#### Part B — Metadata Enrichment and Local Output
+
+Files implemented:
+
+* `src/cleaning/enrich_with_station_metadata.py`
+* `src/common/io_utils.py`
+* `configs/paths.yaml`
+* `src/cleaning/run_local_sample_pipeline.py`
+* updated `scripts/run_local_sample_pipeline.sh`
+
+Key capabilities:
+
+* join cleaned weather data with station metadata
+* derive geographic attributes:
+
+  * `state`
+  * `region` (U.S. region mapping)
+* attach station attributes:
+
+  * station name
+  * latitude / longitude
+  * elevation
+* config-driven path resolution:
+
+  * no hardcoded local or output paths
+* write cleaned enriched dataset as **Parquet**
+
+Output:
+
+* `outputs/sample_runs/cleaned_enriched_sample`
+
+---
+
+#### Part C — Data Quality Validation
+
+Files implemented:
+
+* `notebooks/04_cleaning_validation.ipynb`
+* `tests/test_quality_filters.py`
+* `tests/test_unit_conversions.py`
+* updated `data_contracts/quality_flag_rules.md`
+
+Validation checks performed:
+
+* missingness after cleaning
+* wind data usability validation
+* unit correctness across all weather fields
+* physical plausibility checks:
+
+  * wind speed
+  * temperature
+  * pressure
+  * visibility
+  * ceiling height
+* consistency validation:
+
+  * dew point ≤ temperature
+* station metadata coverage:
+
+  * join correctness
+  * region derivation
+
+Testing:
+
+* QC filter unit tests → **all passed**
+* unit conversion tests → **all passed**
+* end-to-end pipeline validation using local sample runs
+
+---
+
+#### Key Observations
+
+* cleaning pipeline successfully removes low-quality observations
+* remaining data is physically consistent and modeling-ready
+* wind-focused filtering ensures high-quality wind signals
+* metadata enrichment correctly attaches geographic context
+* cleaned dataset is stable and reproducible
+
+---
+
+#### Key Outcome
+
+* transformation from parsed data → **cleaned, enriched weather dataset**
+* reliable wind speed measurements in m/s
+* validated QC rules and data contracts
+* trusted local dataset ready for modeling
+
+---
+
+#### Layer 3 Merge Checkpoint
+
+* cleaned schema is fixed and stable
+* wind speed in m/s is reliable
+* QC enforcement validated through tests
+* metadata joins are correct
+* cleaned local outputs are trusted
+
+---
+
+#### Completion Criteria (Achieved)
+
+* an analysis-ready weather dataset
+* reliable wind observations for modeling
+* validated cleaning and QC logic
+* reproducible local pipeline outputs
+
+---
+
+#### Input to Next Layer
+
+* cleaned enriched weather data
+* validated QC rules and transformations
 
 ---
 
