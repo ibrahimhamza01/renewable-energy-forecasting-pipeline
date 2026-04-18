@@ -21,21 +21,31 @@ Designed for **big data processing with PySpark**, **config-driven cloud executi
 - Source: NOAA ISD (AWS Open Data)
 - Format: CSV (wide schema with encoded fields)
 - Scale: 600GB+ uncompressed
-- Coverage:
-  - Global stations (~35,000)
-  - Hourly observations
-  - Years: 1901–2025
 
-### Project Scope
+### Coverage
 
-- Geographic scope: **contiguous U.S.**
-- Large-scale project window: **1995–2025**
-- Local development subset:
-  - states: **CA, TX, MN, FL**
-  - years: **2018–2020**
-  - target size: **~150 stations**
+- Global stations (~35,000)
+- Hourly observations
+- Years: 1901–2025
 
-### Core Fields in Scope
+---
+
+## Project Scope
+
+### Geographic scope
+- **Contiguous U.S.**
+
+### Large-scale project window
+- **1995–2025**
+
+### Local development subset
+- states: **CA, TX, MN, FL**
+- years: **2018–2020**
+- target size: **~150 stations**
+
+---
+
+## Core Fields in Scope
 
 - `WND` → wind speed & direction (**primary target field**)
 - `TMP` → temperature
@@ -45,14 +55,16 @@ Designed for **big data processing with PySpark**, **config-driven cloud executi
 - `SLP` → pressure
 - `DATE` → **true timestamp (used for all time logic)**
 
-### Important Notes
+---
 
-- S3 file timestamps are **not** data timestamps
-- Always use the `DATE` column for time-based analysis
-- Many weather fields are **encoded strings** and will require parsing
-- The dataset is **wide and sparse**, so many optional columns are excluded from the v1 core scope
-- Wind is the **primary modeling target**
-- Sparse auxiliary weather fields are **secondary**
+## Important Notes
+
+- S3 file timestamps are **not** data timestamps  
+- Always use the `DATE` column for time-based analysis  
+- Many weather fields are **encoded strings** and require parsing  
+- The dataset is **wide and sparse**, so optional fields are excluded from v1  
+- Wind is the **primary modeling target**  
+- Auxiliary weather fields are **secondary**  
 - Solar is **out of scope**
 
 ---
@@ -65,8 +77,8 @@ Designed for **big data processing with PySpark**, **config-driven cloud executi
 - **Pandas / NumPy**
 - **PyArrow**
 - **AWS (S3, EC2)**
-- **Airflow** (planned orchestration layer)
-- **Datashader / Plotly** (visualization)
+- **Airflow** (planned)
+- **Datashader / Plotly**
 
 ---
 
@@ -89,26 +101,19 @@ outputs/        → generated artifacts (gitignored)
 
 ## Setup (uv workflow)
 
-We use **uv** for dependency management.
-
-Do **not** use:
-
-* `pip`
-* `requirements.txt`
-
-### 1. Install dependencies
+### Install dependencies
 
 ```bash
 uv sync
 ```
 
-### 2. Activate environment
+### Activate environment
 
 ```bash
 source .venv/bin/activate
 ```
 
-### 3. Verify
+### Verify
 
 ```bash
 which python
@@ -118,7 +123,7 @@ which python
 
 ## Configuration System
 
-This project is **config-driven** to support multiple teammates with different AWS setups.
+This project is **config-driven** to support multiple users and environments.
 
 ### Never hardcode
 
@@ -128,15 +133,17 @@ This project is **config-driven** to support multiple teammates with different A
 * Local directories
 * Output paths
 
+---
+
 ### Configuration layers
 
 #### 1. Shared config (`configs/`)
 
 Defines:
 
-* logical dataset paths
+* dataset paths
 * Spark settings
-* project-wide defaults
+* project defaults
 
 Examples:
 
@@ -145,42 +152,35 @@ Examples:
 
 #### 2. User config (`configs/users/<name>.yaml`)
 
-Defines personal infrastructure settings such as:
+Defines:
 
 * S3 bucket
-* S3 prefix
 * EC2 host
-* Spark master URL
-* local data root
+* Spark master
+* local paths
 
-#### 3. Active config selection
+#### 3. Active config
 
 ```bash
 export PROJECT_USER_CONFIG=configs/users/syed.yaml
-```
-
-or in `.env`:
-
-```env
-PROJECT_USER_CONFIG=configs/users/syed.yaml
 ```
 
 ---
 
 ## Development Workflow
 
-Follow this cycle for every layer:
-
 1. Build locally on a small sample
-2. Validate with notebooks and checks
-3. Scale later to Spark (EC2 + S3)
-4. Re-validate outputs locally
+2. Validate with notebooks and tests
+3. Scale to Spark (EC2 + S3)
+4. Re-validate outputs
 
 ---
 
 ## Current Status
 
-### Layer 0 — Project Foundation (Complete)
+---
+
+### Layer 0 — Project Foundation ✅
 
 Completed:
 
@@ -191,142 +191,147 @@ Completed:
 
 Key outcome:
 
-* the project now has a consistent local development setup
-* cloud-specific values are intended to be config-driven rather than hardcoded
-* the repo structure is organized for layered development
+* consistent local development setup
+* config-driven design (no hardcoding)
+* structured repository for layered development
 
 ---
 
-### Layer 1 — NOAA ISD Understanding and Development Scope (Complete)
+### Layer 1 — NOAA ISD Understanding and Scope Definition ✅
 
-Completed:
+#### Part A — Raw dataset understanding
 
-* raw dataset inspection and field behavior study
-* station metadata loading and contiguous U.S. filtering
-* development subset and wind-only viability decision
+Key findings:
 
-#### Part A — Raw dataset inspection and field behavior study
+* data organized as **year/station.csv**
 
-Files created/updated:
+* each file = **station-year**
 
-* `src/ingestion/discover_isd_files.py`
-* `notebooks/01_dataset_understanding.ipynb`
-* `configs/schema/isd_raw_schema.json`
+* each row = **timestamped observation**
 
-Main findings:
+* core encoded fields identified:
 
-* NOAA ISD CSV data is organized as **`year/station.csv`**
-* each file represents a **station-year**
-* each row is a **timestamped weather observation**
-* core encoded weather fields consistently observed:
+  * `WND`, `TMP`, `DEW`, `VIS`, `CIG`, `SLP`
 
-  * `WND`
-  * `CIG`
-  * `VIS`
-  * `TMP`
-  * `DEW`
-  * `SLP`
-* common sentinel and missing patterns observed:
+* common sentinel patterns:
 
-  * `9999`
-  * `+9999`
-  * `99999`
-  * `999999`
-* extra fields such as `CALL_SIGN` and `REM` were observed but treated as non-core
-* many optional encoded field families were found to be sparse or inconsistent and were excluded from the v1 core scope
+  * `9999`, `+9999`, `99999`, `999999`
 
-Key outcome:
+Outcome:
 
-* the raw NOAA ISD row structure is understood
-* the core raw field scope is fixed
+* raw schema understood
+* core field scope fixed
 
-#### Part B — Station metadata and contiguous U.S. scope filtering
+---
 
-Files created/updated:
+#### Part B — Station filtering (contiguous U.S.)
 
-* `src/ingestion/station_metadata_loader.py`
-* `src/ingestion/station_filter.py`
-* `notebooks/02_station_scope_and_coverage.ipynb`
-* `docs/architecture/data_flow.md`
+Key results:
 
-Main findings:
-
-* station metadata was loaded from NOAA `isd-history.csv`
-* contiguous U.S. filtering required more than `country_code = US`
-* geographic filtering and state filtering were both needed
-* stations with invalid coordinates or missing state information had to be removed
-
-Filtering summary:
-
-* total metadata stations loaded: **28,474**
+* total stations: **28,474**
 * U.S. stations: **7,074**
-* valid-coordinate U.S. stations: **7,052**
-* after excluding Alaska, Hawaii, and territories: **6,432**
-* contiguous U.S. stations: **6,225**
-* stations overlapping `1995–2025`: **4,943**
+* contiguous U.S.: **6,225**
+* valid stations (1995–2025): **4,943**
 
-Key outcome:
+Outcome:
 
-* a clean contiguous U.S. station master was defined
-* retained station metadata includes:
+* clean station master defined
+* geographic scope finalized
 
-  * station_id
-  * latitude
-  * longitude
-  * elevation
-  * state
-  * active year range
+---
 
-#### Part C — Development subset and viability decision for wind-only project
+#### Part C — Development subset + modeling direction
 
-Files created/updated:
+Key decisions:
 
-* `docs/experiments/dataset_viability.md`
-* `docs/presentation/question_map.md`
-* `notebooks/02_station_scope_and_coverage.ipynb`
+* local subset:
 
-Main findings:
+  * CA, TX, MN, FL
+  * 2018–2020
+  * ~150 stations
 
-* selected local development states:
+* modeling:
 
-  * **CA**
-  * **TX**
-  * **MN**
-  * **FL**
-* station counts in selected states:
+  * wind = **primary**
+  * other fields = **secondary**
 
-  * CA: **492**
-  * TX: **490**
-  * FL: **301**
-  * MN: **204**
-* stations in selected states overlapping `1995–2025`: **1,162**
-* stations in selected states overlapping `2018–2020`: **630**
+Outcome:
 
-Development subset decision:
+* scope locked
+* modeling direction finalized
 
-* local development subset:
+---
 
-  * states: **CA, TX, MN, FL**
-  * years: **2018–2020**
-  * target size: **~150 stations**
-* large-scale project scope:
+### Layer 2 — Core Field Parsing Pipeline ✅
 
-  * contiguous U.S.
-  * years: **1995–2025**
+#### Part A — Parser implementation
 
-Modeling scope decision:
+Implemented parsers for:
 
-* wind is the **primary** modeling focus
-* `WND` plus station metadata is sufficient to support a wind-focused project
-* `TMP`, `DEW`, `SLP`, `VIS`, and `CIG` are secondary supporting fields
-* solar is **out of scope**
+* `WND` → wind direction, speed, QC
+* `TMP` → temperature (tenths °C → °C)
+* `DEW` → dew point
+* `SLP` → pressure
+* `VIS` → visibility
+* `CIG` → ceiling
 
-Key outcome:
+Design principles:
 
-* contiguous U.S. station scope is fixed
-* core columns are fixed
-* development subset is fixed
-* wind-only direction is approved internally
+* schema-first parsing
+* sentinel handling → NULL
+* malformed input → safe fallback (no crashes)
+* QC fields preserved (no filtering yet)
+
+---
+
+#### Part B — Pipeline integration
+
+Files created:
+
+* `parse_all_fields.py`
+* `spark_utils.py`
+* `run_local_sample_pipeline.py`
+* `scripts/run_local_sample_pipeline.sh`
+
+Capabilities:
+
+* run full parsing pipeline locally
+* write output as **Parquet**
+* environment-safe Spark configuration
+* no hardcoded paths
+
+---
+
+#### Part C — Validation and testing
+
+Validation methods:
+
+* notebook-based validation (`03_parse_validation.ipynb`)
+* unit tests (`tests/test_parsers.py`)
+* integration test for full pipeline
+* schema inspection (`printSchema`)
+* null distribution checks
+* numeric sanity checks (min/max)
+
+---
+
+#### Key Observations
+
+* encoded NOAA fields successfully converted to structured columns
+* sentinel values consistently mapped to NULL
+* malformed inputs handled without breaking pipeline
+* QC flags preserved for downstream validation
+* Spark returns decimals for scaled values (expected behavior)
+* parsing layer is intentionally **non-strict** (semantic validation deferred)
+
+---
+
+#### Key Outcome
+
+* reliable transformation from **raw encoded NOAA fields → structured weather features**
+* stable, testable parsing layer
+* reproducible local pipeline execution
+* schema finalized for downstream processing
 
 ---
 
@@ -342,11 +347,10 @@ Key outcome:
 
 ## Final Note
 
-This project is being developed as a staged, production-style data pipeline:
+This project follows a production-style pipeline design:
 
 * local-first validation
-* later distributed execution
+* distributed execution readiness
 * config-driven reproducibility
-* clear scope control
-* focused wind forecasting objective
-
+* strict scope control
+* wind-focused modeling objective
