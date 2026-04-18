@@ -1,0 +1,125 @@
+{
+  "description": "Schema for parsed NOAA ISD core weather fields after Layer 2 parsing.",
+  "version": "1.0",
+  "fields": [
+    {
+      "name": "wind_direction_degrees",
+      "type": "integer",
+      "nullable": true,
+      "description": "Wind direction in degrees (0–360). Null if missing or invalid."
+    },
+    {
+      "name": "wind_direction_qc",
+      "type": "string",
+      "nullable": true,
+      "description": "Quality control flag for wind direction."
+    },
+    {
+      "name": "wind_observation_type",
+      "type": "string",
+      "nullable": true,
+      "description": "Wind observation type code."
+    },
+    {
+      "name": "wind_speed_ms",
+      "type": "double",
+      "nullable": true,
+      "description": "Wind speed in meters per second. Converted from tenths of m/s."
+    },
+    {
+      "name": "wind_speed_qc",
+      "type": "string",
+      "nullable": true,
+      "description": "Quality control flag for wind speed."
+    },
+
+    {
+      "name": "temperature_c",
+      "type": "double",
+      "nullable": true,
+      "description": "Air temperature in degrees Celsius. Converted from tenths."
+    },
+    {
+      "name": "temperature_qc",
+      "type": "string",
+      "nullable": true,
+      "description": "Quality control flag for temperature."
+    },
+
+    {
+      "name": "dew_point_c",
+      "type": "double",
+      "nullable": true,
+      "description": "Dew point temperature in degrees Celsius. Converted from tenths."
+    },
+    {
+      "name": "dew_point_qc",
+      "type": "string",
+      "nullable": true,
+      "description": "Quality control flag for dew point."
+    },
+
+    {
+      "name": "sea_level_pressure_hpa",
+      "type": "double",
+      "nullable": true,
+      "description": "Sea level pressure in hPa. Converted from tenths."
+    },
+    {
+      "name": "sea_level_pressure_qc",
+      "type": "string",
+      "nullable": true,
+      "description": "Quality control flag for sea level pressure."
+    },
+
+    {
+      "name": "visibility_distance_m",
+      "type": "double",
+      "nullable": true,
+      "description": "Horizontal visibility distance in meters."
+    },
+    {
+      "name": "visibility_distance_qc",
+      "type": "string",
+      "nullable": true,
+      "description": "Quality control flag for visibility distance."
+    },
+    {
+      "name": "visibility_variability",
+      "type": "string",
+      "nullable": true,
+      "description": "Visibility variability code."
+    },
+    {
+      "name": "visibility_variability_qc",
+      "type": "string",
+      "nullable": true,
+      "description": "Quality control flag for visibility variability."
+    },
+
+    {
+      "name": "ceiling_height_m",
+      "type": "double",
+      "nullable": true,
+      "description": "Ceiling height in meters."
+    },
+    {
+      "name": "ceiling_height_qc",
+      "type": "string",
+      "nullable": true,
+      "description": "Quality control flag for ceiling height."
+    },
+    {
+      "name": "ceiling_determination_code",
+      "type": "string",
+      "nullable": true,
+      "description": "Ceiling determination code."
+    },
+    {
+      "name": "ceiling_cavok",
+      "type": "string",
+      "nullable": true,
+      "description": "CAVOK (Ceiling And Visibility OK) indicator."
+    }
+  ]
+}

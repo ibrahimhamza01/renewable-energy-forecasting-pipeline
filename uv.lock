@@ -2079,6 +2079,7 @@ dependencies = [
     { name = "plotly" },
     { name = "pyarrow" },
     { name = "pyspark" },
+    { name = "pytest" },
     { name = "pyyaml" },
 ]
 
@@ -2103,6 +2104,7 @@ requires-dist = [
     { name = "plotly", specifier = ">=5.20.0" },
     { name = "pyarrow", specifier = ">=15.0.0" },
     { name = "pyspark", specifier = ">=3.5.0" },
+    { name = "pytest", specifier = ">=9.0.3" },
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=8.0.0" },
     { name = "pyyaml", specifier = ">=6.0.0" },
 ]
