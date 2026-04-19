@@ -40,3 +40,7 @@ metastore_db/
 dist/
 build/
 *.egg-info/
+
+# Configuration files
+configs/users/*.yaml
+!configs/users/template.yaml

@@ -10,7 +10,8 @@ class Paths:
         self.local_data_root = Path(config.runtime["local_data_root"])
         self.local_output_root = Path(config.runtime["local_output_root"])
 
-        self.aws_bucket = config.aws["s3_bucket"]
+        self.source_bucket = config.aws["source_bucket"]
+        self.project_bucket = config.aws["project_bucket"]
 
         self._logical_paths = config.paths
 
@@ -18,50 +19,53 @@ class Paths:
         return str(self.local_data_root / relative_path)
 
     def _local_output_path(self, relative_path: str) -> str:
-        return str(self.project_root / relative_path)
+        return str(self.local_output_root / relative_path)
 
-    def _s3_path(self, relative_path: str) -> str:
-        return f"s3://{self.aws_bucket}/{relative_path}"
+    def _source_s3_path(self, relative_path: str) -> str:
+        return f"s3://{self.source_bucket}/{relative_path}"
+
+    def _project_s3_path(self, relative_path: str) -> str:
+        return f"s3://{self.project_bucket}/{relative_path}"
 
     @property
     def raw_isd(self) -> str:
-        return self._s3_path(self._logical_paths["data"]["raw_isd"])
+        return self._source_s3_path(self._logical_paths["data"]["raw_isd"])
 
     @property
     def bronze_isd(self) -> str:
-        return self._s3_path(self._logical_paths["bronze"]["isd"])
+        return self._project_s3_path(self._logical_paths["bronze"]["isd"])
 
     @property
     def silver_weather(self) -> str:
-        return self._s3_path(self._logical_paths["silver"]["weather"])
+        return self._project_s3_path(self._logical_paths["silver"]["weather"])
 
     @property
     def gold_wind_station_hourly(self) -> str:
-        return self._s3_path(self._logical_paths["gold"]["wind_station_hourly"])
+        return self._project_s3_path(self._logical_paths["gold"]["wind_station_hourly"])
 
     @property
     def gold_wind_station_daily(self) -> str:
-        return self._s3_path(self._logical_paths["gold"]["wind_station_daily"])
+        return self._project_s3_path(self._logical_paths["gold"]["wind_station_daily"])
 
     @property
     def gold_wind_region_daily(self) -> str:
-        return self._s3_path(self._logical_paths["gold"]["wind_region_daily"])
+        return self._project_s3_path(self._logical_paths["gold"]["wind_region_daily"])
 
     @property
     def gold_wind_region_monthly(self) -> str:
-        return self._s3_path(self._logical_paths["gold"]["wind_region_monthly"])
+        return self._project_s3_path(self._logical_paths["gold"]["wind_region_monthly"])
 
     @property
     def model_registry(self) -> str:
-        return self._s3_path(self._logical_paths["models"]["registry"])
+        return self._project_s3_path(self._logical_paths["models"]["registry"])
 
     @property
     def forecast_outputs(self) -> str:
-        return self._s3_path(self._logical_paths["forecasts"]["outputs"])
+        return self._project_s3_path(self._logical_paths["forecasts"]["outputs"])
 
     @property
     def benchmark_results(self) -> str:
-        return self._s3_path(self._logical_paths["benchmarks"]["results"])
+        return self._project_s3_path(self._logical_paths["benchmarks"]["results"])
 
     @property
     def output_figures(self) -> str:
@@ -81,7 +85,9 @@ class Paths:
 
     @property
     def station_master_contiguous_us(self) -> str:
-        return self._local_output_path(self._logical_paths["outputs"]["station_master_contiguous_us"])
+        return self._local_output_path(
+            self._logical_paths["outputs"]["station_master_contiguous_us"]
+        )
 
     @property
     def cleaned_enriched_sample(self) -> str:

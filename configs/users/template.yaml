@@ -7,7 +7,14 @@ user:
 
 aws:
   region: us-east-1
-  s3_bucket: your-s3-bucket-name
+
+  # Public NOAA source (DO NOT CHANGE)
+  source_bucket: noaa-global-hourly-pds
+  source_raw_prefix: ""
+
+  # Your personal project bucket (WRITE HERE)
+  project_bucket: your-s3-bucket-name
+
   bronze_prefix: bronze/isd
   silver_prefix: silver/weather
   gold_prefix: gold/wind
