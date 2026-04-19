@@ -123,7 +123,7 @@ which python
 
 ## Configuration System
 
-This project is **config-driven** to support multiple users and environments.
+This project is **fully config-driven** to support multiple users and environments.
 
 ### Never hardcode
 
@@ -150,14 +150,18 @@ Examples:
 * `configs/paths.yaml`
 * `configs/spark_config.yaml`
 
+---
+
 #### 2. User config (`configs/users/<name>.yaml`)
 
 Defines:
 
-* S3 bucket
-* EC2 host
-* Spark master
-* local paths
+* AWS project bucket
+* EC2 host + SSH access
+* Spark master URL
+* local runtime paths
+
+---
 
 #### 3. Active config
 
@@ -192,8 +196,8 @@ Completed:
 Key outcome:
 
 * consistent local development setup
-* config-driven design (no hardcoding)
-* structured repository for layered development
+* config-driven architecture (no hardcoding)
+* structured, scalable project foundation
 
 ---
 
@@ -204,18 +208,16 @@ Key outcome:
 Key findings:
 
 * data organized as **year/station.csv**
-
 * each file = **station-year**
-
 * each row = **timestamped observation**
 
-* core encoded fields identified:
+Core encoded fields:
 
-  * `WND`, `TMP`, `DEW`, `VIS`, `CIG`, `SLP`
+* `WND`, `TMP`, `DEW`, `VIS`, `CIG`, `SLP`
 
-* common sentinel patterns:
+Sentinel values:
 
-  * `9999`, `+9999`, `99999`, `999999`
+* `9999`, `+9999`, `99999`, `999999`
 
 Outcome:
 
@@ -244,16 +246,14 @@ Outcome:
 
 Key decisions:
 
-* local subset:
+* CA, TX, MN, FL
+* 2018–2020
+* ~150 stations
 
-  * CA, TX, MN, FL
-  * 2018–2020
-  * ~150 stations
+Modeling:
 
-* modeling:
-
-  * wind = **primary**
-  * other fields = **secondary**
+* wind = **primary target**
+* other fields = **secondary**
 
 Outcome:
 
@@ -264,233 +264,216 @@ Outcome:
 
 ### Layer 2 — Core Field Parsing Pipeline
 
-#### Part A — Parser implementation
+#### Parsing
 
-Implemented parsers for:
+* implemented parsers for WND, TMP, DEW, VIS, CIG, SLP
+* sentinel → NULL handling
+* QC fields preserved
+* safe parsing (no crashes)
 
-* `WND` → wind direction, speed, QC
-* `TMP` → temperature (tenths °C → °C)
-* `DEW` → dew point
-* `SLP` → pressure
-* `VIS` → visibility
-* `CIG` → ceiling
+#### Pipeline
 
-Design principles:
+* full local Spark pipeline
+* Parquet output
+* config-driven execution
 
-* schema-first parsing
-* sentinel handling → NULL
-* malformed input → safe fallback (no crashes)
-* QC fields preserved (no filtering yet)
+#### Validation
 
----
+* notebooks + unit tests
+* schema inspection
+* null analysis
+* numeric sanity checks
 
-#### Part B — Pipeline integration
+Outcome:
 
-Files created:
-
-* `parse_all_fields.py`
-* `spark_utils.py`
-* `run_local_sample_pipeline.py`
-* `scripts/run_local_sample_pipeline.sh`
-
-Capabilities:
-
-* run full parsing pipeline locally
-* write output as **Parquet**
-* environment-safe Spark configuration
-* no hardcoded paths
-
----
-
-#### Part C — Validation and testing
-
-Validation methods:
-
-* notebook-based validation (`03_parse_validation.ipynb`)
-* unit tests (`tests/test_parsers.py`)
-* integration test for full pipeline
-* schema inspection (`printSchema`)
-* null distribution checks
-* numeric sanity checks (min/max)
-
----
-
-#### Key Observations
-
-* encoded NOAA fields successfully converted to structured columns
-* sentinel values consistently mapped to NULL
-* malformed inputs handled without breaking pipeline
-* QC flags preserved for downstream validation
-* Spark returns decimals for scaled values (expected behavior)
-* parsing layer is intentionally **non-strict** (semantic validation deferred)
-
----
-
-#### Key Outcome
-
-* reliable transformation from **raw encoded NOAA fields → structured weather features**
-* stable, testable parsing layer
-* reproducible local pipeline execution
-* schema finalized for downstream processing
+* reliable structured dataset from raw NOAA fields
 
 ---
 
 ### Layer 3 — Cleaning, QC Enforcement, Unit Standardization, Metadata Enrichment
 
-#### Goal
+#### Cleaning
 
-Transform parsed weather observations into **analysis-ready data** suitable for wind energy modeling.
+* QC filtering
+* unit standardization (m/s, °C, hPa)
+* timestamp normalization
+* physical consistency checks
 
----
+#### Enrichment
 
-#### Part A — Cleaning and Unit Standardization
+* station metadata join
+* geographic attributes (state, region)
 
-Files implemented:
+#### Validation
 
-* `src/cleaning/quality_filters.py`
-* `src/cleaning/standardize_units.py`
-* `src/cleaning/clean_isd.py`
+* unit tests
+* notebook validation
+* physical plausibility checks
 
-Key logic implemented:
+Outcome:
 
-* QC flag filtering across all core weather fields
-* invalid value removal using domain bounds
-* sentinel-to-null handling for all measurements
-* wind speed conversion to **meters per second (m/s)**
-* temperature and dew point conversion to **°C**
-* pressure conversion to **hPa**
-* timestamp normalization → `timestamp_utc`, `date_utc`, and time components
-* basic consistency checks:
-
-  * dew point ≤ temperature
-* wind-focused usability filtering:
-
-  * `has_valid_wind_speed`
-  * `has_valid_timestamp`
-  * `is_core_row_complete`
-  * `is_wind_row_usable`
-
-Key design decisions:
-
-* strict QC enforcement (invalid values dropped, not imputed)
-* wind speed quality prioritized as primary modeling signal
-* cleaning applied before unit conversion
-* audit and diagnostic flags retained for transparency
+* analysis-ready cleaned dataset
 
 ---
 
-#### Part B — Metadata Enrichment and Local Output
+### Layer 4 — Cloud Runtime, EC2/S3/Spark Setup, User-Isolated Execution
 
-Files implemented:
+---
 
-* `src/cleaning/enrich_with_station_metadata.py`
-* `src/common/io_utils.py`
+#### Part A — EC2 Spark Environment Bootstrap
+
+Implemented:
+
+* `infra/aws/bootstrap/install_dependencies.sh`
+* `infra/aws/bootstrap/master_bootstrap.sh`
+* EC2 provisioning workflow
+
+Capabilities:
+
+* install system dependencies (Java, Python, uv)
+* install Spark (3.5.6)
+* configure environment automatically
+* start Spark master + worker on EC2
+* verify cluster via UI and CLI
+
+Cluster setup:
+
+```
+EC2 Instance
+ ├── Spark Master (7077)
+ ├── Spark Worker
+ └── Driver (spark-submit)
+```
+
+Validation:
+
+* Spark UI accessible (port 8080)
+* worker successfully registered
+* test Spark job executed locally on cluster
+
+Outcome:
+
+* fully functional single-node Spark cluster on EC2
+
+---
+
+#### Part B — Config-Driven S3 Layout and Path Abstraction
+
+Implemented:
+
 * `configs/paths.yaml`
-* `src/cleaning/run_local_sample_pipeline.py`
-* updated `scripts/run_local_sample_pipeline.sh`
+* `configs/users/*.yaml`
+* `src/common/paths.py`
+* `src/common/aws_utils.py`
 
-Key capabilities:
+Key design:
 
-* join cleaned weather data with station metadata
-* derive geographic attributes:
+* separation of **source bucket (NOAA)** vs **project bucket**
+* logical path abstraction layer
+* no hardcoded S3 paths anywhere in pipeline
 
-  * `state`
-  * `region` (U.S. region mapping)
-* attach station attributes:
+Path system:
 
-  * station name
-  * latitude / longitude
-  * elevation
-* config-driven path resolution:
+* raw: `s3a://noaa-global-hourly-pds`
+* bronze: `s3a://<user-bucket>/bronze/...`
+* silver: `s3a://<user-bucket>/silver/...`
+* gold: `s3a://<user-bucket>/gold/...`
+* outputs: local filesystem (config-driven)
 
-  * no hardcoded local or output paths
-* write cleaned enriched dataset as **Parquet**
+Capabilities:
 
-Output:
+* dynamic path resolution
+* environment portability across users
+* consistent S3 structure
 
-* `outputs/sample_runs/cleaned_enriched_sample`
+Validation:
 
----
+* path resolution tested
+* S3 listing verified
+* config switching confirmed
 
-#### Part C — Data Quality Validation
+Outcome:
 
-Files implemented:
-
-* `notebooks/04_cleaning_validation.ipynb`
-* `tests/test_quality_filters.py`
-* `tests/test_unit_conversions.py`
-* updated `data_contracts/quality_flag_rules.md`
-
-Validation checks performed:
-
-* missingness after cleaning
-* wind data usability validation
-* unit correctness across all weather fields
-* physical plausibility checks:
-
-  * wind speed
-  * temperature
-  * pressure
-  * visibility
-  * ceiling height
-* consistency validation:
-
-  * dew point ≤ temperature
-* station metadata coverage:
-
-  * join correctness
-  * region derivation
-
-Testing:
-
-* QC filter unit tests → **all passed**
-* unit conversion tests → **all passed**
-* end-to-end pipeline validation using local sample runs
+* fully config-driven cloud path system
+* zero hardcoded infrastructure paths
 
 ---
 
-#### Key Observations
+#### Part C — Remote Job Submission and Smoke Tests
 
-* cleaning pipeline successfully removes low-quality observations
-* remaining data is physically consistent and modeling-ready
-* wind-focused filtering ensures high-quality wind signals
-* metadata enrichment correctly attaches geographic context
-* cleaned dataset is stable and reproducible
+Implemented:
+
+* `scripts/bootstrap_repo.sh`
+* `scripts/run_spark_job.sh`
+* `src/common/spark_utils.py`
+* remote smoke test script
+
+Capabilities:
+
+* config-driven Spark submission
+* dynamic master resolution
+* dependency injection (`--packages`)
+* S3A support via Hadoop AWS connector
+* EC2 IAM role-based authentication
+
+Key fix:
+
+* added Hadoop AWS dependency:
+
+  ```
+  org.apache.hadoop:hadoop-aws:3.3.4
+  ```
+* switched to `s3a://` protocol
+
+Validation:
+
+* Spark job submitted remotely
+* executor allocated successfully
+* DataFrame operations executed
+* Parquet written to S3
+
+Verified output:
+
+```
+s3://syed-datsbd-s2026/bronze/isd/_smoke_test/
+  _SUCCESS
+  part-*.parquet
+```
+
+Outcome:
+
+* fully validated cloud execution workflow
+* Spark jobs run end-to-end on EC2
+* data written correctly to S3
 
 ---
 
-#### Key Outcome
+### Layer 4 Merge Checkpoint
 
-* transformation from parsed data → **cleaned, enriched weather dataset**
-* reliable wind speed measurements in m/s
-* validated QC rules and data contracts
-* trusted local dataset ready for modeling
+Achieved:
 
----
-
-#### Layer 3 Merge Checkpoint
-
-* cleaned schema is fixed and stable
-* wind speed in m/s is reliable
-* QC enforcement validated through tests
-* metadata joins are correct
-* cleaned local outputs are trusted
+* each user can run jobs on their own EC2 + S3
+* all S3 paths are config-driven
+* Spark jobs run remotely via `spark-submit`
+* no hardcoded cloud identifiers remain
+* environment is fully portable
 
 ---
 
-#### Completion Criteria (Achieved)
+### Completion Criteria (Achieved)
 
-* an analysis-ready weather dataset
-* reliable wind observations for modeling
-* validated cleaning and QC logic
-* reproducible local pipeline outputs
+* working distributed runtime
+* validated Spark cluster
+* config-driven S3 integration
+* successful remote execution pipeline
 
 ---
 
-#### Input to Next Layer
+### Input to Next Layer
 
-* cleaned enriched weather data
-* validated QC rules and transformations
+* working cloud runtime
+* validated S3 integration
+* ready for large-scale ingestion
 
 ---
 
@@ -506,10 +489,10 @@ Testing:
 
 ## Final Note
 
-This project follows a production-style pipeline design:
+This project follows a **production-grade pipeline design**:
 
 * local-first validation
 * distributed execution readiness
 * config-driven reproducibility
-* strict scope control
+* strict modular layering
 * wind-focused modeling objective
