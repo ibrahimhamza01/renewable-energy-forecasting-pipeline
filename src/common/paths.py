@@ -22,10 +22,10 @@ class Paths:
         return str(self.local_output_root / relative_path)
 
     def _source_s3_path(self, relative_path: str) -> str:
-        return f"s3://{self.source_bucket}/{relative_path}"
+        return f"s3a://{self.source_bucket}" if not relative_path else f"s3a://{self.source_bucket}/{relative_path}"
 
     def _project_s3_path(self, relative_path: str) -> str:
-        return f"s3://{self.project_bucket}/{relative_path}"
+        return f"s3a://{self.project_bucket}" if not relative_path else f"s3a://{self.project_bucket}/{relative_path}"
 
     @property
     def raw_isd(self) -> str:

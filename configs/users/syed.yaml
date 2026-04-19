@@ -7,7 +7,7 @@ aws:
   source_bucket: noaa-global-hourly-pds
   source_raw_prefix: ""
 
-  project_bucket: REPLACE_ME
+  project_bucket: syed-datsbd-s2026
 
   bronze_prefix: bronze/isd
   silver_prefix: silver/weather
@@ -21,6 +21,6 @@ runtime:
   local_output_root: /home/ubuntu/renewable-energy-forecasting-pipeline/outputs
 
 ec2:
-  spark_master_url: local[*]
-  ssh_host: REPLACE_ME
+  spark_master_url: spark://172.31.80.104:7077 # NOT PERMANENT
+  ssh_host: ec2-44-204-68-235.compute-1.amazonaws.com
   ssh_user: ubuntu

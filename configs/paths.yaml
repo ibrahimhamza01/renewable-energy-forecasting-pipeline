@@ -1,9 +1,9 @@
 # Logical path definitions
 # These are NOT real paths — they are abstract names
-# They will be resolved using user config + runtime config
+# They are resolved through user config + runtime config
 
 data:
-  raw_isd: "raw/isd"
+  raw_isd: ""
 
 bronze:
   isd: "bronze/isd"
@@ -18,18 +18,18 @@ gold:
   wind_region_monthly: "gold/wind/region/monthly"
 
 models:
-  registry: "models"
+  registry: "models/registry"
 
 forecasts:
-  outputs: "forecasts"
+  outputs: "forecasts/outputs"
 
 benchmarks:
-  results: "benchmarks"
+  results: "benchmarks/results"
 
 outputs:
-  figures: "outputs/figures"
-  metrics: "outputs/metrics"
-  sample_runs: "outputs/sample_runs"
-  parsed_sample: "outputs/sample_runs/parsed_sample"
-  station_master_contiguous_us: "outputs/sample_runs/station_master_contiguous_us.csv"
-  cleaned_enriched_sample: "outputs/sample_runs/cleaned_enriched_sample"
+  figures: "figures"
+  metrics: "metrics"
+  sample_runs: "sample_runs"
+  parsed_sample: "sample_runs/parsed_sample"
+  station_master_contiguous_us: "sample_runs/station_master_contiguous_us.csv"
+  cleaned_enriched_sample: "sample_runs/cleaned_enriched_sample"
