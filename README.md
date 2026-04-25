@@ -318,162 +318,178 @@ Outcome:
 
 ### Layer 4 — Cloud Runtime, EC2/S3/Spark Setup, User-Isolated Execution
 
----
-
 #### Part A — EC2 Spark Environment Bootstrap
 
-Implemented:
+* Spark cluster (master + worker) on EC2
+* automated bootstrap scripts
+* validated Spark execution environment
 
-* `infra/aws/bootstrap/install_dependencies.sh`
-* `infra/aws/bootstrap/master_bootstrap.sh`
-* EC2 provisioning workflow
+#### Part B — Config-Driven S3 Layout
 
-Capabilities:
+* logical path abstraction (`Paths`)
+* separation of raw vs project buckets
+* dynamic resolution of S3 paths
 
-* install system dependencies (Java, Python, uv)
-* install Spark (3.5.6)
-* configure environment automatically
-* start Spark master + worker on EC2
-* verify cluster via UI and CLI
+#### Part C — Remote Job Submission
 
-Cluster setup:
-
-```
-EC2 Instance
- ├── Spark Master (7077)
- ├── Spark Worker
- └── Driver (spark-submit)
-```
-
-Validation:
-
-* Spark UI accessible (port 8080)
-* worker successfully registered
-* test Spark job executed locally on cluster
+* Spark jobs executed via `spark-submit`
+* S3A integration (Hadoop AWS)
+* IAM-based authentication
 
 Outcome:
 
-* fully functional single-node Spark cluster on EC2
+* fully operational distributed runtime
+* reproducible cloud execution per user
 
 ---
 
-#### Part B — Config-Driven S3 Layout and Path Abstraction
-
-Implemented:
-
-* `configs/paths.yaml`
-* `configs/users/*.yaml`
-* `src/common/paths.py`
-* `src/common/aws_utils.py`
-
-Key design:
-
-* separation of **source bucket (NOAA)** vs **project bucket**
-* logical path abstraction layer
-* no hardcoded S3 paths anywhere in pipeline
-
-Path system:
-
-* raw: `s3a://noaa-global-hourly-pds`
-* bronze: `s3a://<user-bucket>/bronze/...`
-* silver: `s3a://<user-bucket>/silver/...`
-* gold: `s3a://<user-bucket>/gold/...`
-* outputs: local filesystem (config-driven)
-
-Capabilities:
-
-* dynamic path resolution
-* environment portability across users
-* consistent S3 structure
-
-Validation:
-
-* path resolution tested
-* S3 listing verified
-* config switching confirmed
-
-Outcome:
-
-* fully config-driven cloud path system
-* zero hardcoded infrastructure paths
+### Layer 5 — Bronze and Silver Data Lake Creation at Scale
 
 ---
 
-#### Part C — Remote Job Submission and Smoke Tests
+#### Part A — Raw Ingestion and Bronze Compaction
 
 Implemented:
 
-* `scripts/bootstrap_repo.sh`
-* `scripts/run_spark_job.sh`
-* `src/common/spark_utils.py`
-* remote smoke test script
+* distributed ingestion of NOAA ISD CSV files from S3
+* parallel reading of thousands of station-year files
+* normalization of raw ingestion schema
+* handling of missing NOAA files gracefully
+* mitigation of small-file problem via compaction
 
 Capabilities:
 
-* config-driven Spark submission
-* dynamic master resolution
-* dependency injection (`--packages`)
-* S3A support via Hadoop AWS connector
-* EC2 IAM role-based authentication
+* ingestion scaled across Spark executors
+* robust handling of incomplete NOAA datasets
+* efficient Parquet write to S3
 
-Key fix:
+Output:
 
-* added Hadoop AWS dependency:
-
-  ```
-  org.apache.hadoop:hadoop-aws:3.3.4
-  ```
-* switched to `s3a://` protocol
-
-Validation:
-
-* Spark job submitted remotely
-* executor allocated successfully
-* DataFrame operations executed
-* Parquet written to S3
-
-Verified output:
+* Bronze dataset written to:
 
 ```
-s3://syed-datsbd-s2026/bronze/isd/_smoke_test/
-  _SUCCESS
-  part-*.parquet
+s3a://<user-bucket>/bronze/isd
 ```
 
 Outcome:
 
-* fully validated cloud execution workflow
-* Spark jobs run end-to-end on EC2
-* data written correctly to S3
+* scalable raw data lake layer established
+* ingestion pipeline validated on distributed infrastructure
 
 ---
 
-### Layer 4 Merge Checkpoint
+#### Part B — Parsing, Cleaning, Enrichment, Silver Writing at Scale
+
+Implemented:
+
+* distributed parsing of encoded NOAA fields
+* QC enforcement at scale
+* unit standardization (wind in m/s, temp in °C, pressure in hPa)
+* join with station metadata (~5,800 stations)
+* partitioned Parquet writes
+
+Partitioning strategy:
+
+* `year`
+* `state`
+
+Capabilities:
+
+* large-scale transformation pipeline
+* efficient partitioned storage layout
+* optimized downstream read performance
+
+Output:
+
+```
+s3a://<user-bucket>/silver/weather
+```
+
+Outcome:
+
+* **analysis-ready silver dataset at scale**
+* consistent schema across partitions
+* enriched dataset with geographic attributes
+
+---
+
+#### Part C — Scaled ETL Validation and Performance Review
+
+Validation performed via notebook:
+
+```
+notebooks/05_scaled_etl_validation.ipynb
+```
+
+##### Dataset scale
+
+* Bronze rows: **35,504,907**
+* Silver rows: **28,893,512**
+* Retention rate: **~81%**
+
+##### Partition validation
+
+* years: **2018, 2019, 2020**
+* states: **CA, TX, MN, FL**
+* partitions balanced across states and years
+
+##### Data quality checks
+
+* no nulls in critical fields (`station_id`, `timestamp`, `state`)
+* wind speed distribution realistic:
+
+  * median: **3.1 m/s**
+  * p95: **7.7 m/s**
+  * max: **61.3 m/s**
+* zero wind (~20%) consistent with real observations
+* no physically impossible values detected
+
+##### Schema validation
+
+* schema stable across partitions
+* required columns present
+* correct data types enforced
+
+##### Performance validation
+
+* partition pruning works efficiently
+* selective reads execute in ~1–2 seconds
+* dataset suitable for downstream analytics
+
+Outcome:
+
+* silver dataset verified as **trusted source of truth**
+* pipeline validated at scale
+* ready for modeling and feature engineering
+
+---
+
+### Layer 5 Merge Checkpoint
 
 Achieved:
 
-* each user can run jobs on their own EC2 + S3
-* all S3 paths are config-driven
-* Spark jobs run remotely via `spark-submit`
-* no hardcoded cloud identifiers remain
-* environment is fully portable
+* bronze and silver layers exist in S3
+* silver dataset validated and trusted
+* partitioning strategy confirmed effective
+* distributed ETL pipeline fully operational
 
 ---
 
 ### Completion Criteria (Achieved)
 
-* working distributed runtime
-* validated Spark cluster
-* config-driven S3 integration
-* successful remote execution pipeline
+* scalable ingestion pipeline
+* distributed transformation pipeline
+* validated silver data lake
+* production-grade data quality checks
+* performant partitioned storage
 
 ---
 
 ### Input to Next Layer
 
-* working cloud runtime
-* validated S3 integration
-* ready for large-scale ingestion
+* validated silver weather dataset
+* ready for feature engineering and modeling
+* ready for full dataset scaling (1995–2025)
 
 ---
 
