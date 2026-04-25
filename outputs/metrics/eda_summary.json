@@ -1,0 +1,155 @@
+{
+  "year": 2020,
+  "total_rows": 158593,
+  "n_stations": 20,
+  "quality": [
+    {
+      "STATION": "72290023188",
+      "station_name": "San Diego INTL",
+      "state": "CA",
+      "records": 12509,
+      "wind_nulls": 378,
+      "dir_nulls": 4038,
+      "first_obs": "2020-01-01 00:00:00",
+      "last_obs": "2020-12-31 23:51:00",
+      "wind_null_pct": 3.0
+    },
+    {
+      "STATION": "72295023174",
+      "station_name": "Los Angeles INTL",
+      "state": "CA",
+      "records": 12166,
+      "wind_nulls": 380,
+      "dir_nulls": 2729,
+      "first_obs": "2020-01-01 00:00:00",
+      "last_obs": "2020-12-31 23:53:00",
+      "wind_null_pct": 3.1
+    },
+    {
+      "STATION": "72494023234",
+      "station_name": "San Francisco INTL",
+      "state": "CA",
+      "records": 11924,
+      "wind_nulls": 378,
+      "dir_nulls": 1606,
+      "first_obs": "2020-01-01 00:00:00",
+      "last_obs": "2020-12-31 23:56:00",
+      "wind_null_pct": 3.2
+    },
+    {
+      "STATION": "72206013889",
+      "station_name": "Jacksonville INTL",
+      "state": "FL",
+      "records": 13925,
+      "wind_nulls": 383,
+      "dir_nulls": 3185,
+      "first_obs": "2020-01-01 00:00:00",
+      "last_obs": "2020-12-31 23:56:00",
+      "wind_null_pct": 2.8
+    },
+    {
+      "STATION": "72202012839",
+      "station_name": "Miami INTL",
+      "state": "FL",
+      "records": 13876,
+      "wind_nulls": 383,
+      "dir_nulls": 2233,
+      "first_obs": "2020-01-01 00:00:00",
+      "last_obs": "2020-12-31 23:53:00",
+      "wind_null_pct": 2.8
+    },
+    {
+      "STATION": "72211012842",
+      "station_name": "Tampa INTL",
+      "state": "FL",
+      "records": 13642,
+      "wind_nulls": 401,
+      "dir_nulls": 2587,
+      "first_obs": "2020-01-01 00:00:00",
+      "last_obs": "2020-12-31 23:53:00",
+      "wind_null_pct": 2.9
+    },
+    {
+      "STATION": "72205012815",
+      "station_name": "Orlando INTL",
+      "state": "FL",
+      "records": 12144,
+      "wind_nulls": 379,
+      "dir_nulls": 1800,
+      "first_obs": "2020-01-01 00:00:00",
+      "last_obs": "2020-12-31 23:53:00",
+      "wind_null_pct": 3.1
+    },
+    {
+      "STATION": "72658014922",
+      "station_name": "Minneapolis-St Paul INTL",
+      "state": "MN",
+      "records": 42118,
+      "wind_nulls": 29819,
+      "dir_nulls": 30806,
+      "first_obs": "2020-01-01 00:00:00",
+      "last_obs": "2020-12-31 23:53:00",
+      "wind_null_pct": 70.8
+    },
+    {
+      "STATION": "72253012921",
+      "station_name": "San Antonio INTL",
+      "state": "TX",
+      "records": 13998,
+      "wind_nulls": 379,
+      "dir_nulls": 1984,
+      "first_obs": "2020-01-01 00:00:00",
+      "last_obs": "2020-12-31 23:51:00",
+      "wind_null_pct": 2.7
+    },
+    {
+      "STATION": "72243012960",
+      "station_name": "Houston Hobby",
+      "state": "TX",
+      "records": 12291,
+      "wind_nulls": 378,
+      "dir_nulls": 2062,
+      "first_obs": "2020-01-01 00:00:00",
+      "last_obs": "2020-12-31 23:53:00",
+      "wind_null_pct": 3.1
+    }
+  ],
+  "speed_stats": [
+    {
+      "state": "CA",
+      "n": 35463,
+      "mean": 3.271982065814709,
+      "median": 2.6,
+      "p95": 8.2,
+      "max": 18.0,
+      "stddev": 2.539270058656171
+    },
+    {
+      "state": "FL",
+      "n": 52041,
+      "mean": 3.4326492573157497,
+      "median": 3.1,
+      "p95": 7.2,
+      "max": 19.6,
+      "stddev": 2.184411773730318
+    },
+    {
+      "state": "MN",
+      "n": 12299,
+      "mean": 4.084267013577681,
+      "median": 3.6,
+      "p95": 8.2,
+      "max": 16.0,
+      "stddev": 2.32178209889396
+    },
+    {
+      "state": "TX",
+      "n": 25532,
+      "mean": 3.6568893937014346,
+      "median": 3.6,
+      "p95": 7.7,
+      "max": 18.0,
+      "stddev": 2.208547655072878
+    }
+  ]
+}
