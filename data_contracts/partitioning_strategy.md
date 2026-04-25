@@ -1,18 +1,97 @@
-# Partitioning and Storage Strategy - Silver Layer
+# Partitioning Strategy — Silver Weather Data
 
-## Strategy Overview
-The Silver weather data is stored in **Parquet** format with a specific focus on query performance for wind energy analytics.
+## Overview
 
-## Physical Layout
-- **Source:** s3a://bigdatafinal/bronze/isd
-- **Target:** s3a://bigdatafinal/silver/weather
-- **Format:** Parquet (Snappy compressed)
-- **File Count:** 8 optimized files (~200 MiB each)
+This document defines the physical layout and access patterns for the Silver weather dataset.
 
-## Design Decisions
-1. **Compaction:** We consolidated thousands of small NOAA CSV files into 8 large Parquet files to mitigate the "small-file overhead" in S3/Spark.
-2. **Sorting:** Data is sorted by `station_id` and `timestamp_utc`. This ensures that downstream time-series analysis for specific stations is extremely fast.
-3. **Schema Stability:** All meteorological units are standardized (e.g., Wind Speed in m/s, Temperature in Celsius).
+---
 
-## Downstream Impact
-Data Scientists should only read the **Silver** layer. The Bronze layer is considered "raw" and should not be used for modeling.
+## Storage Location
+
+- Format: Parquet  
+- Storage: S3  
+- Path structure:
+
+```
+
+silver/weather/year=<year>/state=<state>/
+
+````
+
+---
+
+## Partitioning Scheme
+
+The Silver dataset is partitioned by:
+
+- `year`
+- `state`
+
+### Rationale
+
+- Enables efficient time-based filtering (common in forecasting)
+- Enables regional/state-level analysis
+- Supports partition pruning in Spark queries
+
+---
+
+## Expected Partition Characteristics
+
+- Each partition contains millions of rows
+- File sizes are optimized via repartitioning during write
+- Avoids small file problem
+
+---
+
+## Access Requirements
+
+All downstream consumers **must**:
+
+- Filter by `year` whenever possible
+- Filter by `state` when doing regional analysis
+
+Example:
+
+```python
+df.filter((F.col("year") == 2020) & (F.col("state") == "TX"))
+````
+
+---
+
+## Guarantees
+
+The Silver dataset guarantees:
+
+* Valid timestamps (`timestamp_utc`)
+* Clean wind speed (`wind_speed_ms`)
+* Valid geographic mapping (`state`, `region`)
+* Physically plausible weather values
+
+---
+
+## Non-Guaranteed Fields
+
+Some fields may contain nulls due to source limitations:
+
+* wind_direction_degrees
+* visibility_distance_m
+* ceiling_height_m
+* sea_level_pressure_hpa
+
+Downstream systems must handle these appropriately.
+
+---
+
+## Future Scaling
+
+* Partitioning scheme will remain stable for full dataset (1995–2025)
+* Additional partitioning (e.g., month) may be introduced only if required for performance
+
+---
+
+## Contract Summary
+
+* Partition keys: `year`, `state`
+* Storage format: Parquet
+* Source of truth: Silver layer
+* Downstream reads: must be partition-aware

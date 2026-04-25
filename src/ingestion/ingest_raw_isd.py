@@ -1,3 +1,263 @@
-def ingest_raw_noaa(spark, source_path):
-    """Parallel ingestion of multiple NOAA CSVs."""
-    return spark.read.option("header", "true").csv(source_path)
+"""
+Layer 5 Part A: Raw NOAA ISD ingestion to bronze.
+
+Reads raw NOAA ISD CSV files from S3, preserves raw columns, adds ingestion
+metadata, compacts output, and writes bronze Parquet to the active user's S3
+bucket.
+
+This script does NOT parse or clean encoded fields. That happens in silver.
+"""
+
+from __future__ import annotations
+
+import argparse
+from datetime import datetime, timezone
+from typing import Iterable
+
+from pyspark.sql import DataFrame, SparkSession
+from pyspark.sql import functions as F
+
+from src.common.config import config
+from src.common.paths import Paths
+from src.common.spark_utils import get_spark_session
+from src.storage.repartition_compaction import compact_for_bronze
+from src.storage.write_bronze import write_bronze
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        description="Ingest raw NOAA ISD CSV files and write bronze Parquet."
+    )
+
+    parser.add_argument(
+        "--years",
+        nargs="+",
+        type=int,
+        required=True,
+        help="Years to ingest. Example: --years 2018 2019 2020",
+    )
+
+    parser.add_argument(
+        "--states",
+        nargs="+",
+        required=True,
+        help="State codes to ingest. Example: --states CA TX MN FL",
+    )
+
+    parser.add_argument(
+        "--station-master-path",
+        required=True,
+        help="Path to station master CSV or Parquet.",
+    )
+
+    parser.add_argument(
+        "--max-stations",
+        type=int,
+        default=None,
+        help="Optional station cap for test runs.",
+    )
+
+    parser.add_argument(
+        "--target-files-per-year",
+        type=int,
+        default=8,
+        help="Approximate number of bronze output files per year.",
+    )
+
+    return parser.parse_args()
+
+
+def load_station_master(
+    spark: SparkSession,
+    station_master_path: str,
+    states: Iterable[str],
+    max_stations: int | None = None,
+) -> DataFrame:
+    path_lower = station_master_path.lower()
+
+    if path_lower.endswith(".parquet"):
+        df = spark.read.parquet(station_master_path)
+    else:
+        df = (
+            spark.read
+            .option("header", True)
+            .option("inferSchema", True)
+            .csv(station_master_path)
+        )
+
+    columns_lower = {col.lower(): col for col in df.columns}
+
+    station_col = (
+        columns_lower.get("station")
+        or columns_lower.get("station_id")
+        or columns_lower.get("usaf_wban")
+    )
+
+    state_col = columns_lower.get("state")
+
+    if station_col is None:
+        raise ValueError(
+            "Station master must contain one of these columns: "
+            "station, station_id, or usaf_wban."
+        )
+
+    if state_col is None:
+        raise ValueError("Station master must contain a state column.")
+
+    selected_states = [state.upper() for state in states]
+
+    station_df = (
+        df.withColumnRenamed(station_col, "station_id")
+        .withColumnRenamed(state_col, "state")
+        .withColumn("station_id", F.col("station_id").cast("string"))
+        .withColumn("state", F.upper(F.col("state")))
+        .filter(F.col("state").isin(selected_states))
+        .select("station_id", "state")
+        .dropDuplicates(["station_id"])
+        .orderBy("station_id")
+    )
+
+    if max_stations is not None:
+        station_df = station_df.limit(max_stations)
+
+    return station_df
+
+
+def build_noaa_paths(
+    raw_isd_root: str,
+    station_ids: list[str],
+    years: list[int],
+) -> list[str]:
+    """
+    NOAA layout:
+    s3a://noaa-global-hourly-pds/<year>/<station>.csv
+    """
+    paths: list[str] = []
+
+    raw_isd_root = raw_isd_root.rstrip("/")
+
+    for year in years:
+        for station_id in station_ids:
+            paths.append(f"{raw_isd_root}/{year}/{station_id}.csv")
+
+    return paths
+
+def filter_existing_paths(spark: SparkSession, paths: list[str]) -> list[str]:
+    """
+    Keep only S3 paths that actually exist before Spark tries to read them.
+    """
+
+    jvm = spark.sparkContext._jvm
+    hadoop_conf = spark.sparkContext._jsc.hadoopConfiguration()
+
+    existing_paths: list[str] = []
+
+    for path in paths:
+        j_path = jvm.org.apache.hadoop.fs.Path(path)
+        fs = j_path.getFileSystem(hadoop_conf)
+
+        if fs.exists(j_path):
+            existing_paths.append(path)
+        else:
+            print(f"Skipping missing file: {path}")
+
+    return existing_paths
+
+
+def read_raw_isd_csv(spark: SparkSession, paths: list[str]) -> DataFrame:
+    """
+    Read only NOAA ISD CSV files that exist.
+    """
+
+    if not paths:
+        raise ValueError("No NOAA paths were generated.")
+
+    existing_paths = filter_existing_paths(spark, paths)
+
+    if not existing_paths:
+        raise ValueError(
+            "None of the generated NOAA paths exist. "
+            "Check station IDs, year, and NOAA path format."
+        )
+
+    print(f"Existing input files: {len(existing_paths)} / {len(paths)}")
+
+    return (
+        spark.read
+        .option("header", True)
+        .option("inferSchema", False)
+        .option("mode", "PERMISSIVE")
+        .csv(existing_paths)
+    )
+
+
+def add_bronze_metadata(df: DataFrame) -> DataFrame:
+    ingested_at = datetime.now(timezone.utc).isoformat()
+
+    return (
+        df.withColumn("ingested_at_utc", F.lit(ingested_at))
+        .withColumn("ingest_source", F.lit("noaa-global-hourly-pds"))
+        .withColumn("ingest_layer", F.lit("bronze"))
+        .withColumn("year", F.year(F.to_timestamp(F.col("DATE"))))
+    )
+
+
+def main() -> None:
+    args = parse_args()
+
+    spark = get_spark_session(app_name="layer5_ingest_raw_isd_to_bronze")
+    paths = Paths()
+
+    station_master_df = load_station_master(
+        spark=spark,
+        station_master_path=args.station_master_path,
+        states=args.states,
+        max_stations=args.max_stations,
+    )
+
+    station_ids = [row["station_id"] for row in station_master_df.collect()]
+
+    if not station_ids:
+        raise ValueError(
+            f"No stations found for states={args.states}. "
+            "Check station master file and state column."
+        )
+
+    noaa_paths = build_noaa_paths(
+        raw_isd_root=paths.raw_isd,
+        station_ids=station_ids,
+        years=args.years,
+    )
+
+    print("Starting bronze ingestion")
+    print(f"Active project bucket: {config.aws['project_bucket']}")
+    print(f"Raw NOAA root: {paths.raw_isd}")
+    print(f"Bronze output: {paths.bronze_isd}")
+    print(f"Years: {args.years}")
+    print(f"States: {args.states}")
+    print(f"Stations: {len(station_ids)}")
+    print(f"Input files: {len(noaa_paths)}")
+
+    raw_df = read_raw_isd_csv(spark=spark, paths=noaa_paths)
+    bronze_df = add_bronze_metadata(raw_df)
+
+    compacted_df = compact_for_bronze(
+        df=bronze_df,
+        partition_col="year",
+        target_files_per_partition=args.target_files_per_year,
+    )
+
+    write_bronze(
+        df=compacted_df,
+        output_path=paths.bronze_isd,
+        partition_cols=["year"],
+    )
+
+    print("Bronze ingestion complete.")
+    print(f"Output written to: {paths.bronze_isd}")
+
+    spark.stop()
+
+
+if __name__ == "__main__":
+    main()

@@ -96,8 +96,12 @@ def join_station_metadata(
 ) -> DataFrame:
     """
     Left join cleaned weather observations to station metadata on station_id.
+
+    Avoids duplicate/conflicting raw NOAA columns such as LATITUDE, LONGITUDE,
+    ELEVATION, NAME that may already exist in the weather DataFrame.
     """
     weather_cols = weather_df.columns
+    weather_cols_lower = {c.lower() for c in weather_cols}
 
     metadata_cols = [
         station_col,
@@ -112,7 +116,11 @@ def join_station_metadata(
         "begin_year",
         "end_year",
     ]
-    metadata_cols = [c for c in metadata_cols if c in station_df.columns]
+
+    metadata_cols = [
+        c for c in metadata_cols
+        if c in station_df.columns
+    ]
 
     station_df_selected = station_df.select(*metadata_cols).dropDuplicates([station_col])
 
@@ -122,8 +130,15 @@ def join_station_metadata(
         how="left",
     )
 
-    ordered_cols = weather_cols + [c for c in station_df_selected.columns if c != station_col]
-    return joined.select(*ordered_cols)
+    metadata_output_cols = [
+        c for c in station_df_selected.columns
+        if c != station_col and c.lower() not in weather_cols_lower
+    ]
+
+    return joined.select(
+        *[F.col(f"w.{c}").alias(c) for c in weather_cols],
+        *[F.col(f"s.{c}").alias(c) for c in metadata_output_cols],
+    )
 
 
 def enrich_with_station_metadata(

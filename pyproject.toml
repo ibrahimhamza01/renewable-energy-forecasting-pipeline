@@ -20,6 +20,8 @@ dependencies = [
     "plotly>=5.20.0",
     "ipykernel>=7.2.0",
     "pytest>=9.0.3",
+    "notebook>=7.5.5",
+    "dotenv>=0.9.9",
 ]
 
 [project.optional-dependencies]
