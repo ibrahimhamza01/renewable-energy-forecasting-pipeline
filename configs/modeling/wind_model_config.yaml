@@ -1,0 +1,40 @@
+# Wind turbine model configuration
+# Reference turbine parameters for wind energy potential analysis
+
+turbine:
+  name: generic_utility_scale
+  description: >
+    Generic utility-scale wind turbine based on typical modern
+    turbines (e.g., Vestas V90-2.0, GE 1.5sle class).
+    Used for normalized power output and capacity factor estimation.
+
+  # Operating speeds (m/s)
+  cut_in_speed: 3.5
+  rated_speed: 13.0
+  cut_out_speed: 25.0
+
+  # Physical constants
+  air_density_kg_m3: 1.225   # standard sea level
+
+  # Hub height assumption
+  hub_height_m: 80           # typical utility-scale
+
+physics:
+  # NREL wind power class boundaries (m/s at 10m height)
+  wind_power_classes:
+    class_1_max: 4.4    # Poor
+    class_2_max: 5.1    # Marginal
+    class_3_max: 5.6    # Fair
+    class_4_max: 6.0    # Good
+    class_5_max: 6.4    # Excellent
+    class_6_max: 7.0    # Outstanding
+    # class_7: >= 7.0   # Superb
+
+analysis:
+  # Wind speed sanity bounds
+  min_valid_wind_speed_ms: 0.0
+  max_valid_wind_speed_ms: 120.0  # physical limit
+
+  # Minimum observations per aggregation period
+  min_hourly_obs_per_day: 6       # at least 6 hours of data for daily agg
+  min_daily_obs_per_month: 15     # at least 15 days for monthly agg
