@@ -1,3 +1,5 @@
+# src/storage/write_silver.py
+
 from __future__ import annotations
 
 import argparse
@@ -17,9 +19,17 @@ def write_silver(
     output_path: str,
     partition_cols: list[str],
     mode: str = "overwrite",
+    target_files_per_year: int = 96,
 ) -> None:
+    if target_files_per_year < 1:
+        raise ValueError("target_files_per_year must be >= 1")
+
+    repartition_cols = [F.col(c) for c in partition_cols]
+
+    df_out = df.repartition(target_files_per_year, *repartition_cols)
+
     (
-        df.write
+        df_out.write
         .mode(mode)
         .partitionBy(*partition_cols)
         .parquet(output_path)
@@ -36,13 +46,20 @@ def parse_args() -> argparse.Namespace:
         nargs="+",
         type=int,
         required=True,
-        help="Years to process, e.g. --years 2018 2019 2020",
+        help="Years to process. Example: --years 2018 2019 2020",
     )
 
     parser.add_argument(
         "--station-master-path",
         required=True,
         help="Path to station master CSV or Parquet.",
+    )
+
+    parser.add_argument(
+        "--mode",
+        default="overwrite",
+        choices=["overwrite", "append"],
+        help="Write mode for silver output.",
     )
 
     return parser.parse_args()
@@ -124,16 +141,18 @@ def main() -> None:
     paths = Paths()
 
     print(f"Reading bronze from: {paths.bronze_isd}")
+    print(f"Years: {args.years}")
+    print(f"Write mode: {args.mode}")
+
     bronze_df = spark.read.parquet(paths.bronze_isd)
     bronze_df = bronze_df.filter(F.col("year").isin(args.years))
 
     normalized_df = normalize_bronze_columns(bronze_df)
-
     parsed_df = add_all_parsed_weather_columns(normalized_df)
 
     cleaned_df = build_cleaned_weather_table(
         parsed_df,
-        keep_extra_columns=True,
+        keep_extra_columns=False,
     )
 
     station_df = load_station_master(
@@ -153,7 +172,7 @@ def main() -> None:
         df=silver_df,
         output_path=paths.silver_weather,
         partition_cols=["year", "state"],
-        mode="overwrite",
+        mode=args.mode,
     )
 
     print("Silver weather table complete.")
