@@ -17,7 +17,7 @@ def write_gold_table(
     mode: str = "overwrite",
 ) -> None:
     if partition_cols:
-        df = df.repartition(64, *partition_cols)
+        df = df.repartition(16, *partition_cols)
 
     writer = (
         df.write

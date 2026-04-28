@@ -139,3 +139,270 @@ def build_and_write_wind_gold_tables(
         gold_daily_region_path=gold_daily_region_path,
         gold_monthly_region_path=gold_monthly_region_path,
     )
+
+# ---------------------------------------------------------------------
+# Layer 7 Part B: Final analytical Gold table builders
+# ---------------------------------------------------------------------
+
+
+def add_season_column(df, month_col: str = "month"):
+    """
+    Add meteorological season label from month.
+
+    Seasons:
+        winter = Dec, Jan, Feb
+        spring = Mar, Apr, May
+        summer = Jun, Jul, Aug
+        fall   = Sep, Oct, Nov
+    """
+
+    return df.withColumn(
+        "season",
+        F.when(F.col(month_col).isin(12, 1, 2), F.lit("winter"))
+        .when(F.col(month_col).isin(3, 4, 5), F.lit("spring"))
+        .when(F.col(month_col).isin(6, 7, 8), F.lit("summer"))
+        .when(F.col(month_col).isin(9, 10, 11), F.lit("fall"))
+        .otherwise(F.lit(None)),
+    )
+
+
+def build_gold_monthly_state_wind(region_monthly_df):
+    """
+    Build final Layer 7 monthly state-level analytical wind table.
+
+    Source:
+        gold/wind/region/monthly
+
+    Output table:
+        gold_monthly_state_wind
+
+    Grain:
+        one row per state-year-month
+
+    Purpose:
+        - strongest states
+        - seasonal wind potential
+        - long-run monthly reporting
+        - presentation-ready descriptive analysis
+    """
+
+    required_cols = [
+        "state",
+        "year",
+        "month",
+        "monthly_region_capacity_factor",
+        "monthly_mean_wind_speed_ms",
+        "min_daily_region_capacity_factor",
+        "max_daily_region_capacity_factor",
+        "daily_observation_count",
+        "avg_station_count",
+        "is_valid_monthly_region_index",
+        "wind_power_class",
+    ]
+
+    df = region_monthly_df.select(*required_cols)
+
+    df = add_season_column(df, month_col="month")
+
+    df = df.withColumn(
+        "capacity_factor_range",
+        F.col("max_daily_region_capacity_factor")
+        - F.col("min_daily_region_capacity_factor"),
+    )
+
+    df = df.withColumn(
+        "is_high_wind_month",
+        F.col("monthly_region_capacity_factor") >= F.lit(0.075),
+    )
+
+    df = df.withColumn(
+        "is_low_wind_month",
+        F.col("monthly_region_capacity_factor") <= F.lit(0.020),
+    )
+
+    return df.select(
+        "state",
+        "year",
+        "month",
+        "season",
+        "monthly_region_capacity_factor",
+        "monthly_mean_wind_speed_ms",
+        "min_daily_region_capacity_factor",
+        "max_daily_region_capacity_factor",
+        "capacity_factor_range",
+        "daily_observation_count",
+        "avg_station_count",
+        "is_valid_monthly_region_index",
+        "wind_power_class",
+        "is_high_wind_month",
+        "is_low_wind_month",
+    )
+
+def build_gold_daily_region_wind(region_daily_df):
+    """
+    Build final Layer 7 daily state-level analytical wind table.
+
+    Source:
+        gold/wind/region/daily
+
+    Output table:
+        gold_daily_region_wind
+
+    Grain:
+        one row per state-date
+
+    Purpose:
+        - daily wind potential analysis
+        - stability and volatility analysis
+        - extreme high/low wind day detection
+        - ML base table source
+    """
+
+    required_cols = [
+        "state",
+        "year",
+        "month",
+        "date_utc",
+        "daily_region_capacity_factor",
+        "mean_region_wind_speed_ms",
+        "avg_station_wind_speed_std_ms",
+        "avg_station_min_wind_speed_ms",
+        "avg_station_max_wind_speed_ms",
+        "station_count",
+        "total_hourly_observations",
+    ]
+
+    df = region_daily_df.select(*required_cols)
+
+    df = add_season_column(df, month_col="month")
+
+    df = df.withColumn(
+        "daily_wind_speed_range_ms",
+        F.col("avg_station_max_wind_speed_ms")
+        - F.col("avg_station_min_wind_speed_ms"),
+    )
+
+    df = df.withColumn(
+        "is_low_wind_day",
+        F.col("daily_region_capacity_factor") <= F.lit(0.01),
+    )
+
+    df = df.withColumn(
+        "is_high_wind_day",
+        F.col("daily_region_capacity_factor") >= F.lit(0.10),
+    )
+
+    return df.select(
+        "state",
+        "date_utc",
+        "year",
+        "month",
+        "season",
+        "daily_region_capacity_factor",
+        "mean_region_wind_speed_ms",
+        "avg_station_wind_speed_std_ms",
+        "avg_station_min_wind_speed_ms",
+        "avg_station_max_wind_speed_ms",
+        "daily_wind_speed_range_ms",
+        "station_count",
+        "total_hourly_observations",
+        "is_low_wind_day",
+        "is_high_wind_day",
+    )
+
+def build_gold_extreme_event_windows(gold_daily_region_df):
+    """
+    Build final Layer 7 extreme wind event table.
+
+    Source:
+        gold_daily_region_wind
+
+    Output table:
+        gold_extreme_event_windows
+
+    Grain:
+        one row per state-date
+    """
+
+    state_thresholds = (
+        gold_daily_region_df
+        .groupBy("state")
+        .agg(
+            F.expr("percentile_approx(daily_region_capacity_factor, 0.10)").alias(
+                "state_low_wind_threshold"
+            ),
+            F.expr("percentile_approx(daily_region_capacity_factor, 0.90)").alias(
+                "state_high_wind_threshold"
+            ),
+            F.avg("daily_region_capacity_factor").alias("state_avg_capacity_factor"),
+            F.stddev("daily_region_capacity_factor").alias("state_std_capacity_factor_raw"),
+        )
+        .withColumn(
+            "state_std_capacity_factor",
+            F.when(
+                F.col("state_std_capacity_factor_raw") < F.lit(1e-6),
+                F.lit(None),
+            ).otherwise(F.col("state_std_capacity_factor_raw")),
+        )
+        .drop("state_std_capacity_factor_raw")
+    )
+
+    df = gold_daily_region_df.join(
+        state_thresholds,
+        on="state",
+        how="left",
+    )
+
+    df = df.withColumn(
+        "is_extreme_low_wind_day",
+        F.col("daily_region_capacity_factor") <= F.col("state_low_wind_threshold"),
+    )
+
+    df = df.withColumn(
+        "is_extreme_high_wind_day",
+        F.col("daily_region_capacity_factor") >= F.col("state_high_wind_threshold"),
+    )
+
+    df = df.withColumn(
+        "capacity_factor_z_score",
+        F.when(
+            F.col("state_std_capacity_factor").isNull(),
+            F.lit(None),
+        ).otherwise(
+            (F.col("daily_region_capacity_factor") - F.col("state_avg_capacity_factor"))
+            / F.col("state_std_capacity_factor")
+        ),
+    )
+
+    df = df.withColumn(
+        "is_extreme_event_day",
+        F.col("is_extreme_low_wind_day") | F.col("is_extreme_high_wind_day"),
+    )
+
+    df = df.withColumn(
+        "extreme_event_type",
+        F.when(F.col("is_extreme_low_wind_day"), F.lit("low_wind"))
+        .when(F.col("is_extreme_high_wind_day"), F.lit("high_wind"))
+        .otherwise(F.lit("normal")),
+    )
+
+    return df.select(
+        "state",
+        "date_utc",
+        "year",
+        "month",
+        "season",
+        "daily_region_capacity_factor",
+        "mean_region_wind_speed_ms",
+        "station_count",
+        "total_hourly_observations",
+        "state_low_wind_threshold",
+        "state_high_wind_threshold",
+        "state_avg_capacity_factor",
+        "state_std_capacity_factor",
+        "capacity_factor_z_score",
+        "is_extreme_low_wind_day",
+        "is_extreme_high_wind_day",
+        "is_extreme_event_day",
+        "extreme_event_type",
+    )
