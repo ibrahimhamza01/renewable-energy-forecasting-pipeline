@@ -4,8 +4,8 @@ spark:
 
   config:
     spark.sql.session.timeZone: UTC
-    spark.sql.shuffle.partitions: 40
-    spark.default.parallelism: 40
+    spark.sql.shuffle.partitions: 80
+    spark.default.parallelism: 80
     spark.sql.execution.arrow.pyspark.enabled: false
 
     spark.driver.memory: 2g

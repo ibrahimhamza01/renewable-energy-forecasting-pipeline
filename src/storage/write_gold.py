@@ -1,9 +1,8 @@
 """
-Layer 6 Part B: Write gold wind tables to S3.
+Layer 6 Part B: Gold table writing utilities.
 
-Reads validated silver weather data, applies wind power curve,
-generates gold tables at multiple aggregation grains, and writes
-them as partitioned Parquet to S3.
+All paths must be resolved before calling these functions.
+This module does not hardcode S3 buckets or prefixes.
 """
 
 from __future__ import annotations
@@ -11,17 +10,40 @@ from __future__ import annotations
 from pyspark.sql import DataFrame
 
 
-def write_gold(
+def write_gold_table(
     df: DataFrame,
     output_path: str,
-    partition_cols: list[str],
+    partition_cols: list[str] | None = None,
     mode: str = "overwrite",
 ) -> None:
-    """Write a gold DataFrame to S3 as partitioned Parquet."""
-    (
+    if partition_cols:
+        df = df.repartition(64, *partition_cols)
+
+    writer = (
         df.write
         .mode(mode)
-        .partitionBy(*partition_cols)
-        .parquet(output_path)
+        .format("parquet")
+        .option("compression", "snappy")
+        .option("partitionOverwriteMode", "dynamic")
     )
-    print(f"Gold table written to: {output_path}")
+
+    if partition_cols:
+        writer = writer.partitionBy(*partition_cols)
+
+    writer.save(output_path)
+
+
+def write_hourly_station_wind_gold(df: DataFrame, output_path: str) -> None:
+    write_gold_table(df, output_path, ["year", "state"], mode="overwrite")
+
+
+def write_daily_station_wind_gold(df: DataFrame, output_path: str) -> None:
+    write_gold_table(df, output_path, ["year", "state"], mode="overwrite")
+
+
+def write_daily_region_wind_gold(df: DataFrame, output_path: str) -> None:
+    write_gold_table(df, output_path, ["year", "state"], mode="overwrite")
+
+
+def write_monthly_region_wind_gold(df: DataFrame, output_path: str) -> None:
+    write_gold_table(df, output_path, ["year", "state"], mode="overwrite")

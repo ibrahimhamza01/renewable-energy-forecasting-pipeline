@@ -1,15 +1,18 @@
 """
-Layer 6 Part B: Wind index generation at multiple grains.
+Layer 6 Part B: Wind index generation.
 
-Transforms silver hourly weather data into gold wind energy tables at
-four aggregation levels:
-  - Station hourly (with power curve applied)
-  - Station daily
-  - Region daily
-  - Region/state monthly
+This module builds wind potential datasets at multiple grains from the
+validated Silver weather table.
 
-All functions expect a silver DataFrame that has already been filtered
-to usable wind rows and enriched with wind power columns.
+It assumes the input Silver table contains:
+
+- station_id
+- timestamp_utc
+- date_utc
+- year
+- month
+- state
+- wind_speed_ms
 """
 
 from __future__ import annotations
@@ -17,143 +20,157 @@ from __future__ import annotations
 from pyspark.sql import DataFrame
 from pyspark.sql import functions as F
 
+from src.physics.wind_power_curve import (
+    add_wind_power_columns,
+    classify_wind_power_class,
+    compute_capacity_factor,
+)
 
-def build_station_hourly_wind(df: DataFrame) -> DataFrame:
+
+def build_hourly_station_wind_potential(df: DataFrame) -> DataFrame:
     """
-    Gold: station-level hourly wind potential.
+    Build hourly station-level wind potential.
 
-    This is essentially the silver table filtered to usable wind rows
-    with power curve columns added. Serves as the base for all higher
-    aggregations.
-
-    Expected input columns:
-      station_id, timestamp_utc, date_utc, year, month, day, hour,
-      state, region, station_name, latitude, longitude, elevation_m,
-      wind_speed_ms, wind_direction_degrees, temperature_c,
-      normalized_power, wind_power_density_wm2
+    Output grain:
+        station_id + timestamp_utc
     """
-    return df.select(
+    required_cols = [
         "station_id",
-        "station_name",
-        "state",
-        "region",
-        F.col("LATITUDE").cast("double").alias("latitude"),
-        F.col("LONGITUDE").cast("double").alias("longitude"),
-        "elevation_m",
         "timestamp_utc",
         "date_utc",
         "year",
         "month",
-        "day",
-        "hour",
+        "state",
         "wind_speed_ms",
-        "wind_direction_degrees",
-        "temperature_c",
-        "dew_point_c",
-        "sea_level_pressure_hpa",
+    ]
+
+    selected = df.select(*required_cols)
+
+    with_power = add_wind_power_columns(
+        selected,
+        wind_speed_col="wind_speed_ms",
+    )
+
+    return with_power.select(
+        "station_id",
+        "timestamp_utc",
+        "date_utc",
+        "year",
+        "month",
+        "state",
+        "wind_speed_ms",
         "normalized_power",
         "wind_power_density_wm2",
     )
 
 
-def build_station_daily_wind(df: DataFrame) -> DataFrame:
+def build_daily_station_wind_potential(
+    hourly_df: DataFrame,
+    min_hourly_obs_per_day: int = 6,
+) -> DataFrame:
     """
-    Gold: station-level daily wind potential aggregation.
+    Build daily station-level wind potential.
 
-    Aggregates hourly station data to daily summaries.
+    Output grain:
+        station_id + date_utc
+    """
+    daily = compute_capacity_factor(
+        hourly_df,
+        power_col="normalized_power",
+        group_cols=["station_id", "date_utc", "year", "month", "state"],
+        output_col="daily_capacity_factor",
+    )
+
+    daily = daily.withColumnRenamed(
+        "observation_count",
+        "hourly_observation_count",
+    )
+
+    daily = daily.withColumn(
+        "is_valid_daily_station_index",
+        F.col("hourly_observation_count") >= F.lit(min_hourly_obs_per_day),
+    )
+
+    return classify_wind_power_class(
+        daily,
+        wind_speed_col="mean_wind_speed_ms",
+        output_col="wind_power_class",
+    )
+
+
+def build_daily_region_wind_potential(
+    daily_station_df: DataFrame,
+) -> DataFrame:
+    """
+    Build daily state/region-level wind potential.
+
+    Current region grain:
+        state + date_utc
     """
     return (
-        df.groupBy(
-            "station_id",
-            "station_name",
-            "state",
-            "region",
-            "date_utc",
-            "year",
-            "month",
-            "day",
-        )
+        daily_station_df
+        .where(F.col("is_valid_daily_station_index") == F.lit(True))
+        .groupBy("state", "date_utc", "year", "month")
         .agg(
-            F.round(F.avg("wind_speed_ms"), 4).alias("mean_wind_speed_ms"),
-            F.round(F.max("wind_speed_ms"), 4).alias("max_wind_speed_ms"),
-            F.round(F.min("wind_speed_ms"), 4).alias("min_wind_speed_ms"),
-            F.round(F.stddev("wind_speed_ms"), 4).alias("std_wind_speed_ms"),
-            F.round(F.avg("normalized_power"), 6).alias("capacity_factor"),
-            F.round(F.avg("wind_power_density_wm2"), 4).alias("mean_wind_power_density_wm2"),
-            F.round(F.max("wind_power_density_wm2"), 4).alias("max_wind_power_density_wm2"),
-            F.round(F.avg("temperature_c"), 4).alias("mean_temperature_c"),
-            F.round(F.avg("sea_level_pressure_hpa"), 4).alias("mean_pressure_hpa"),
-            F.count("wind_speed_ms").alias("observation_count"),
-            # Wind direction — circular mean not trivial, so take mode-like approach
-            F.round(F.avg(
-                F.sin(F.radians(F.col("wind_direction_degrees").cast("double")))
-            ), 6).alias("sin_mean_direction"),
-            F.round(F.avg(
-                F.cos(F.radians(F.col("wind_direction_degrees").cast("double")))
-            ), 6).alias("cos_mean_direction"),
-        )
-        .withColumn(
-            "mean_wind_direction_degrees",
-            F.round(
-                (F.degrees(F.atan2(F.col("sin_mean_direction"), F.col("cos_mean_direction"))) + 360) % 360,
-                1,
+            F.round(F.avg("daily_capacity_factor"), 6).alias(
+                "daily_region_capacity_factor"
             ),
-        )
-        .drop("sin_mean_direction", "cos_mean_direction")
-    )
-
-
-def build_region_daily_wind(station_daily_df: DataFrame) -> DataFrame:
-    """
-    Gold: region-level (state) daily wind potential.
-
-    Aggregates station daily data to state/region daily summaries.
-    """
-    return (
-        station_daily_df.groupBy(
-            "state",
-            "region",
-            "date_utc",
-            "year",
-            "month",
-            "day",
-        )
-        .agg(
-            F.round(F.avg("mean_wind_speed_ms"), 4).alias("mean_wind_speed_ms"),
-            F.round(F.max("max_wind_speed_ms"), 4).alias("max_wind_speed_ms"),
-            F.round(F.avg("capacity_factor"), 6).alias("capacity_factor"),
-            F.round(F.avg("mean_wind_power_density_wm2"), 4).alias("mean_wind_power_density_wm2"),
-            F.round(F.max("max_wind_power_density_wm2"), 4).alias("max_wind_power_density_wm2"),
-            F.round(F.avg("mean_temperature_c"), 4).alias("mean_temperature_c"),
-            F.round(F.avg("mean_pressure_hpa"), 4).alias("mean_pressure_hpa"),
-            F.sum("observation_count").alias("total_observations"),
+            F.round(F.avg("mean_wind_speed_ms"), 4).alias(
+                "mean_region_wind_speed_ms"
+            ),
+            F.round(F.avg("std_wind_speed_ms"), 4).alias(
+                "avg_station_wind_speed_std_ms"
+            ),
+            F.round(F.avg("min_wind_speed_ms"), 4).alias(
+                "avg_station_min_wind_speed_ms"
+            ),
+            F.round(F.avg("max_wind_speed_ms"), 4).alias(
+                "avg_station_max_wind_speed_ms"
+            ),
             F.countDistinct("station_id").alias("station_count"),
+            F.sum("hourly_observation_count").alias("total_hourly_observations"),
         )
     )
 
 
-def build_region_monthly_wind(region_daily_df: DataFrame) -> DataFrame:
+def build_monthly_region_wind_summary(
+    daily_region_df: DataFrame,
+    min_daily_obs_per_month: int = 15,
+) -> DataFrame:
     """
-    Gold: region-level (state) monthly wind potential.
+    Build monthly state/region-level wind summaries.
 
-    Aggregates region daily data to monthly summaries.
+    Current region grain:
+        state + year + month
     """
-    return (
-        region_daily_df.groupBy(
-            "state",
-            "region",
-            "year",
-            "month",
-        )
+    monthly = (
+        daily_region_df
+        .groupBy("state", "year", "month")
         .agg(
-            F.round(F.avg("mean_wind_speed_ms"), 4).alias("mean_wind_speed_ms"),
-            F.round(F.max("max_wind_speed_ms"), 4).alias("max_wind_speed_ms"),
-            F.round(F.avg("capacity_factor"), 6).alias("capacity_factor"),
-            F.round(F.avg("mean_wind_power_density_wm2"), 4).alias("mean_wind_power_density_wm2"),
-            F.round(F.max("max_wind_power_density_wm2"), 4).alias("max_wind_power_density_wm2"),
-            F.round(F.avg("mean_temperature_c"), 4).alias("mean_temperature_c"),
-            F.sum("total_observations").alias("total_observations"),
-            F.round(F.avg("station_count"), 0).cast("int").alias("avg_station_count"),
-            F.count("date_utc").alias("days_in_period"),
+            F.round(F.avg("daily_region_capacity_factor"), 6).alias(
+                "monthly_region_capacity_factor"
+            ),
+            F.round(F.avg("mean_region_wind_speed_ms"), 4).alias(
+                "monthly_mean_wind_speed_ms"
+            ),
+            F.round(F.min("daily_region_capacity_factor"), 6).alias(
+                "min_daily_region_capacity_factor"
+            ),
+            F.round(F.max("daily_region_capacity_factor"), 6).alias(
+                "max_daily_region_capacity_factor"
+            ),
+            F.count("*").alias("daily_observation_count"),
+            F.round(F.avg("station_count"), 2).alias("avg_station_count"),
         )
+    )
+
+    monthly = monthly.withColumn(
+        "is_valid_monthly_region_index",
+        F.col("daily_observation_count") >= F.lit(min_daily_obs_per_month),
+    )
+
+    return classify_wind_power_class(
+        monthly,
+        wind_speed_col="monthly_mean_wind_speed_ms",
+        output_col="wind_power_class",
     )

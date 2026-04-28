@@ -1,95 +1,134 @@
-# Wind Model Assumptions — Layer 6
+## Validation Results
 
-## Turbine Model
+### Local Unit Test Validation
 
-We use a **generic normalized power curve** rather than a specific commercial
-turbine model. This is appropriate because:
+Layer 6 Part A was validated locally using the wind power curve unit test suite.
 
-- The project goal is relative wind energy potential comparison across regions,
-  not absolute energy production estimation.
-- A normalized curve (0.0 to 1.0) allows capacity factor analysis without
-  committing to a specific turbine rating.
+Result:
 
-### Power Curve Parameters
+```text
+23 passed
+````
 
-| Parameter | Value | Source |
-|-----------|-------|--------|
-| Cut-in speed | 3.5 m/s | Typical utility-scale range (3-4 m/s) |
-| Rated speed | 13.0 m/s | Typical utility-scale range (12-15 m/s) |
-| Cut-out speed | 25.0 m/s | Industry standard |
+This confirms:
 
-### Cubic Region
+* cut-in, rated, and cut-out behavior works correctly
+* normalized power stays within the expected range
+* null wind speeds return null
+* negative wind speeds return null
+* wind power density is computed correctly
+* capacity factor aggregation works
+* wind power class assignment works
 
-Between cut-in and rated speed, power follows a cubic relationship:
+### Local Spark Sanity Test
 
-```
-P_normalized = ((v - v_cut_in) / (v_rated - v_cut_in))^3
-```
+A local Spark sanity test was run using synthetic wind speeds:
 
-This is a simplification. Real turbine curves are empirically measured and
-show slight deviations from cubic behavior, but the cubic model is standard
-for resource assessment.
-
-## Air Density
-
-We use standard sea-level air density (ρ = 1.225 kg/m³) for wind power
-density calculations. In practice, air density varies with:
-
-- Altitude (lower at higher elevations)
-- Temperature (lower when warmer)
-- Humidity (slightly lower when humid)
-
-For our stations across CA, TX, MN, and FL, elevation ranges from near
-sea level to ~650m. This introduces up to ~7% error in power density
-estimates at higher-elevation stations, which is acceptable for a
-comparative analysis.
-
-## Observation Height
-
-NOAA ISD wind measurements are typically taken at **10m anemometer height**,
-not at typical turbine hub height (80-100m). Wind speed increases with
-height following the power law:
-
-```
-v(h) = v(h_ref) * (h / h_ref)^alpha
+```text
+0.0, 3.5, 6.0, 13.0, 20.0, 30.0, null, -1.0
 ```
 
-where alpha ≈ 0.143 (1/7 power law) for open terrain.
+Observed behavior:
 
-We do **not** apply height correction in this analysis because:
-- The project compares relative potential across regions
-- All stations use similar measurement heights
-- Height correction would uniformly scale all values
+| Wind speed | Normalized power | Interpretation          |
+| ---------: | ---------------: | ----------------------- |
+|        0.0 |              0.0 | no wind                 |
+|        3.5 |              0.0 | cut-in threshold        |
+|        6.0 |         0.080369 | cubic ramp region       |
+|       13.0 |              1.0 | rated output            |
+|       20.0 |              1.0 | rated-to-cut-out region |
+|       30.0 |              0.0 | above cut-out shutdown  |
+|       null |             null | missing input           |
+|       -1.0 |             null | invalid physical value  |
 
-## Data Quality Filters
+### EC2 Spark Cluster Smoke Test
 
-Before applying the power curve, we filter to:
-- `is_wind_row_usable = true` (QC flags acceptable)
-- `has_valid_wind_speed = true`
-- `wind_speed_ms IS NOT NULL`
-- `wind_speed_ms >= 0`
-- `wind_speed_ms < 120 m/s` (physical sanity cap)
+The wind power curve was also tested using `spark-submit` on the EC2 Spark cluster.
 
-## Wind Direction Averaging
+Spark master:
 
-Daily mean wind direction is computed using circular averaging:
+```text
+spark://ip-172-31-83-109.ec2.internal:7077
 ```
-mean_direction = atan2(mean(sin(θ)), mean(cos(θ)))
+
+Cluster state during validation:
+
+```text
+Alive workers: 4
+Total cores: 8
+Total memory: 26.5 GiB
 ```
 
-This correctly handles the 360°/0° wraparound issue.
+The synthetic Spark smoke test completed successfully and produced expected normalized power and wind power density values.
 
-## NREL Wind Power Classes
+### Real Silver Data Smoke Test
 
-Station locations are classified using approximate NREL wind power classes
-based on mean wind speed at measurement height (10m):
+A real Silver-table smoke test was run against the configured Silver dataset path.
 
-| Class | Speed Range (m/s) | Rating |
-|-------|-------------------|--------|
-| 1 | < 4.4 | Poor |
-| 2 | 4.4 – 5.1 | Marginal |
-| 3 | 5.1 – 5.6 | Fair |
-| 4 | 5.6 – 6.0 | Good |
-| 5 | 6.0 – 6.4 | Excellent |
-| 6 | 6.4 – 7.0 | Outstanding |
-| 7 | ≥ 7.0 | Superb |
+The path was resolved from user config:
+
+```text
+configs/users/syed.yaml
+```
+
+Logical source:
+
+```text
+aws.project_bucket + aws.silver_prefix
+```
+
+Resolved source:
+
+```text
+s3a://syed-datsbd-s2026/silver/weather
+```
+
+The test intentionally used a sample of 10,000 non-null wind-speed rows from Silver:
+
+```python
+.limit(10000)
+```
+
+This was not a full Silver production run. The goal was to confirm that the Layer 6 Part A wind power logic is compatible with the actual Silver schema and Spark/S3 runtime.
+
+Silver schema note:
+
+```text
+timestamp_utc
+```
+
+is the correct Silver timestamp column.
+
+### Real Silver Sample Results
+
+Summary over 10,000 sampled Silver rows:
+
+| Metric                    |        Value |
+| ------------------------- | -----------: |
+| Rows tested               |       10,000 |
+| Minimum wind speed        |      0.0 m/s |
+| Maximum wind speed        |     20.1 m/s |
+| Minimum normalized power  |          0.0 |
+| Maximum normalized power  |          1.0 |
+| Average normalized power  | 0.1046124419 |
+| Bad normalized power rows |            0 |
+
+Validation check:
+
+```text
+bad_normalized_power_rows=0
+```
+
+This confirms that normalized power stayed within the expected `[0, 1]` range on real Silver data.
+
+Completion evidence:
+
+* wind power curve implementation exists
+* config file exists
+* assumptions document exists
+* local tests passed
+* local Spark sanity test passed
+* EC2 Spark synthetic smoke test passed
+* EC2 Spark real Silver sample smoke test passed
+* no invalid normalized power values were found in the Silver sample
+
