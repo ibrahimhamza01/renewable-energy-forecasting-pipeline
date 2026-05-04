@@ -54,6 +54,26 @@ class Paths:
     @property
     def gold_wind_region_monthly(self) -> str:
         return self._project_s3_path(self._logical_paths["gold"]["wind_region_monthly"])
+    
+    @property
+    def gold_wind_ml_base(self) -> str:
+        return self._project_s3_path(self._logical_paths["gold"]["wind_ml_base"])
+
+    @property
+    def gold_wind_ml_features(self) -> str:
+        return self._project_s3_path(self._logical_paths["gold"]["wind_ml_features"])
+
+    @property
+    def gold_wind_ml_train(self) -> str:
+        return self._project_s3_path(self._logical_paths["gold"]["wind_ml_train"])
+
+    @property
+    def gold_wind_ml_validation(self) -> str:
+        return self._project_s3_path(self._logical_paths["gold"]["wind_ml_validation"])
+
+    @property
+    def gold_wind_ml_test(self) -> str:
+        return self._project_s3_path(self._logical_paths["gold"]["wind_ml_test"])
 
     @property
     def model_registry(self) -> str:

@@ -28,3 +28,20 @@ def add_calendar_features(df: DataFrame, date_col: str = "date_utc") -> DataFram
         .withColumn("day_of_week", F.dayofweek(F.col(date_col)))
         .withColumn("is_weekend", F.col("day_of_week").isin(1, 7))
     )
+
+def add_temporal_features(df: DataFrame, date_col: str = "date_utc") -> DataFrame:
+    """
+    Add model-ready calendar and seasonal features.
+
+    These features are known at prediction time, so they do not create leakage.
+    """
+
+    out = (
+        df.withColumn("year", F.year(F.col(date_col)))
+        .withColumn("month", F.month(F.col(date_col)))
+    )
+
+    out = add_calendar_features(out, date_col=date_col)
+    out = add_season_column(out, month_col="month")
+
+    return out

@@ -1,0 +1,22 @@
+dataset:
+  source_table: gold/wind/ml/base
+  feature_table: gold/wind/ml/features
+  train_table: gold/wind/ml/train
+  validation_table: gold/wind/ml/validation
+  test_table: gold/wind/ml/test
+
+split:
+  date_column: date
+  train_end: "2019-12-31"
+  validation_end: "2022-12-31"
+  test_start: "2023-01-01"
+
+target:
+  name: capacity_factor
+  horizon_days: 1
+
+write:
+  format: parquet
+  mode: overwrite
+  partition_by:
+    - split

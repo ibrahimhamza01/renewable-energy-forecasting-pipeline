@@ -17,6 +17,12 @@ gold:
   wind_region_daily: "gold/wind/region/daily"
   wind_region_monthly: "gold/wind/region/monthly"
 
+  wind_ml_base: "gold/wind/ml/base"
+  wind_ml_features: "gold/wind/ml/features"
+  wind_ml_train: "gold/wind/ml/train"
+  wind_ml_validation: "gold/wind/ml/validation"
+  wind_ml_test: "gold/wind/ml/test"
+
 models:
   registry: "models/registry"
 

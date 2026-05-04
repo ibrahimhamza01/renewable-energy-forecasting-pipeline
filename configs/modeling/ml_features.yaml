@@ -1,0 +1,85 @@
+target:
+  name: capacity_factor
+  prediction_horizon_days: 1
+
+entity:
+  region_column: state
+  date_column: date
+
+features:
+  temporal:
+    - year
+    - month
+    - day_of_year
+    - day_of_month
+    - day_of_week
+    - is_weekend
+    - season
+
+  lag:
+    - capacity_factor_lag_1d
+    - capacity_factor_lag_2d
+    - capacity_factor_lag_3d
+    - capacity_factor_lag_7d
+    - capacity_factor_lag_14d
+    - capacity_factor_lag_30d
+
+  lag_delta:
+    - capacity_factor_lag_1d_minus_lag_7d
+    - capacity_factor_lag_1d_minus_lag_14d
+    - capacity_factor_lag_1d_minus_lag_30d
+
+  rolling:
+    - capacity_factor_rolling_3d_mean
+    - capacity_factor_rolling_3d_min
+    - capacity_factor_rolling_3d_max
+    - capacity_factor_rolling_3d_stddev
+    - capacity_factor_rolling_7d_mean
+    - capacity_factor_rolling_7d_min
+    - capacity_factor_rolling_7d_max
+    - capacity_factor_rolling_7d_stddev
+    - capacity_factor_rolling_14d_mean
+    - capacity_factor_rolling_14d_min
+    - capacity_factor_rolling_14d_max
+    - capacity_factor_rolling_14d_stddev
+    - capacity_factor_rolling_30d_mean
+    - capacity_factor_rolling_30d_min
+    - capacity_factor_rolling_30d_max
+    - capacity_factor_rolling_30d_stddev
+
+categorical_features:
+  - state
+  - season
+
+numeric_features:
+  - year
+  - month
+  - day_of_year
+  - day_of_month
+  - day_of_week
+  - is_weekend
+  - capacity_factor_lag_1d
+  - capacity_factor_lag_2d
+  - capacity_factor_lag_3d
+  - capacity_factor_lag_7d
+  - capacity_factor_lag_14d
+  - capacity_factor_lag_30d
+  - capacity_factor_lag_1d_minus_lag_7d
+  - capacity_factor_lag_1d_minus_lag_14d
+  - capacity_factor_lag_1d_minus_lag_30d
+  - capacity_factor_rolling_3d_mean
+  - capacity_factor_rolling_3d_min
+  - capacity_factor_rolling_3d_max
+  - capacity_factor_rolling_3d_stddev
+  - capacity_factor_rolling_7d_mean
+  - capacity_factor_rolling_7d_min
+  - capacity_factor_rolling_7d_max
+  - capacity_factor_rolling_7d_stddev
+  - capacity_factor_rolling_14d_mean
+  - capacity_factor_rolling_14d_min
+  - capacity_factor_rolling_14d_max
+  - capacity_factor_rolling_14d_stddev
+  - capacity_factor_rolling_30d_mean
+  - capacity_factor_rolling_30d_min
+  - capacity_factor_rolling_30d_max
+  - capacity_factor_rolling_30d_stddev
