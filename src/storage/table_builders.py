@@ -11,7 +11,8 @@ All paths must be passed in by the caller.
 from __future__ import annotations
 
 from pyspark.sql import SparkSession
-from pyspark.sql import functions as F
+from pyspark.sql import functions as F 
+from pyspark.sql import Window
 
 from src.physics.wind_indices import (
     build_daily_region_wind_potential,
@@ -405,4 +406,130 @@ def build_gold_extreme_event_windows(gold_daily_region_df):
         "is_extreme_high_wind_day",
         "is_extreme_event_day",
         "extreme_event_type",
+    )
+
+def build_gold_ml_base_wind(gold_daily_region_df):
+    """
+    Build final Layer 7 ML base table for next-day wind potential forecasting.
+
+    Source:
+        gold_daily_region_wind
+
+    Output table:
+        gold_ml_base_wind
+
+    Grain:
+        one row per state-date
+
+    Target:
+        next_day_daily_region_capacity_factor
+
+    Important:
+        All lag and rolling features use current or past values only.
+        The target uses the next day's capacity factor within the same state.
+    """
+
+    required_cols = [
+        "state",
+        "date_utc",
+        "year",
+        "month",
+        "season",
+        "daily_region_capacity_factor",
+        "mean_region_wind_speed_ms",
+        "avg_station_wind_speed_std_ms",
+        "daily_wind_speed_range_ms",
+        "station_count",
+        "total_hourly_observations",
+        "is_low_wind_day",
+        "is_high_wind_day",
+    ]
+
+    base = gold_daily_region_df.select(*required_cols)
+
+    w = Window.partitionBy("state").orderBy("date_utc")
+
+    df = (
+        base
+        .withColumn("cf_lag_1d", F.lag("daily_region_capacity_factor", 1).over(w))
+        .withColumn("cf_lag_2d", F.lag("daily_region_capacity_factor", 2).over(w))
+        .withColumn("cf_lag_3d", F.lag("daily_region_capacity_factor", 3).over(w))
+        .withColumn("cf_lag_7d", F.lag("daily_region_capacity_factor", 7).over(w))
+        .withColumn(
+            "next_day_daily_region_capacity_factor",
+            F.lead("daily_region_capacity_factor", 1).over(w),
+        )
+    )
+
+    rolling_3d = w.rowsBetween(-2, 0)
+    rolling_7d = w.rowsBetween(-6, 0)
+
+    df = (
+        df
+        .withColumn(
+            "cf_rolling_3d_mean",
+            F.avg("daily_region_capacity_factor").over(rolling_3d),
+        )
+        .withColumn(
+            "cf_rolling_3d_std",
+            F.stddev("daily_region_capacity_factor").over(rolling_3d),
+        )
+        .withColumn(
+            "cf_rolling_7d_mean",
+            F.avg("daily_region_capacity_factor").over(rolling_7d),
+        )
+        .withColumn(
+            "cf_rolling_7d_std",
+            F.stddev("daily_region_capacity_factor").over(rolling_7d),
+        )
+        .withColumn("day_of_year", F.dayofyear("date_utc"))
+        .withColumn("day_of_month", F.dayofmonth("date_utc"))
+        .withColumn("day_of_week", F.dayofweek("date_utc"))
+        .withColumn("is_weekend", F.col("day_of_week").isin(1, 7))
+    )
+
+    state_features = (
+        base
+        .groupBy("state")
+        .agg(
+            F.avg("daily_region_capacity_factor").alias("state_long_run_avg_cf"),
+            F.stddev("daily_region_capacity_factor").alias("state_long_run_volatility"),
+        )
+    )
+
+    df = df.join(state_features, on="state", how="left")
+
+    return (
+        df
+        .where(F.col("next_day_daily_region_capacity_factor").isNotNull())
+        .select(
+            "state",
+            "date_utc",
+            "year",
+            "month",
+            "season",
+            "day_of_year",
+            "day_of_month",
+            "day_of_week",
+            "is_weekend",
+            "daily_region_capacity_factor",
+            "next_day_daily_region_capacity_factor",
+            "mean_region_wind_speed_ms",
+            "avg_station_wind_speed_std_ms",
+            "daily_wind_speed_range_ms",
+            "station_count",
+            "total_hourly_observations",
+            "is_low_wind_day",
+            "is_high_wind_day",
+            "cf_lag_1d",
+            "cf_lag_2d",
+            "cf_lag_3d",
+            "cf_lag_7d",
+            "cf_rolling_3d_mean",
+            "cf_rolling_3d_std",
+            "cf_rolling_7d_mean",
+            "cf_rolling_7d_std",
+            "state_long_run_avg_cf",
+            "state_long_run_volatility",
+        )
     )
