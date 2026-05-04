@@ -21,7 +21,7 @@ runtime:
   local_output_root: /home/ubuntu/renewable-energy-forecasting-pipeline/outputs
 
 ec2:
-  spark_master_url: local[*] # NOT PERMANENT
-  # spark_master_url: spark://172.31.83.109:7077 # NOT PERMANENT
+  # spark_master_url: local[*] # NOT PERMANENT
+  spark_master_url: spark://ip-172-31-83-109.ec2.internal:7077 # NOT PERMANENT
   ssh_host: ec2-44-204-68-235.compute-1.amazonaws.com
   ssh_user: ubuntu

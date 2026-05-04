@@ -8,6 +8,9 @@ from botocore.exceptions import ClientError
 
 from src.common.config import config
 
+import json
+from typing import Any
+
 
 def get_boto3_session():
     """
@@ -182,3 +185,30 @@ def join_s3_key(*parts: Optional[str]) -> str:
     """
     cleaned = [part.strip("/") for part in parts if part]
     return "/".join(cleaned)
+
+def s3a_to_s3_uri(uri: str) -> str:
+    """
+    Convert Spark-style s3a:// URI to boto3-compatible s3:// URI.
+    """
+    if uri.startswith("s3a://"):
+        return uri.replace("s3a://", "s3://", 1)
+    return uri
+
+
+def upload_json_to_s3(data: dict[str, Any], s3_uri: str) -> None:
+    """
+    Upload a dictionary as a JSON object to S3.
+    """
+    s3_uri = s3a_to_s3_uri(s3_uri)
+
+    bucket, key = parse_s3_uri(s3_uri)
+    if not key:
+        raise ValueError(f"S3 URI must include an object key: {s3_uri}")
+
+    client = get_s3_client()
+    client.put_object(
+        Bucket=bucket,
+        Key=key,
+        Body=json.dumps(data, indent=2).encode("utf-8"),
+        ContentType="application/json",
+    )
