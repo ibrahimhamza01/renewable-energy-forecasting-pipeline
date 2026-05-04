@@ -29,36 +29,22 @@ Designed for large-scale data processing using PySpark, with config-driven cloud
 ```mermaid
 flowchart LR
 
-A[NOAA ISD Data (S3)]
---> B[Bronze Layer\nRaw Ingestion]
+A["NOAA ISD Data<br/>S3"] --> B["Bronze Layer<br/>Raw Ingestion"]
+B --> C["Silver Layer<br/>Parsing, Cleaning, QC"]
+C --> D["Gold Layer<br/>Analytics Tables"]
+D --> E["Feature Engineering"]
+E --> F["ML Training"]
+F --> G["Model Registry"]
+G --> H["Batch Inference"]
+H --> I["Forecast Outputs"]
 
-B --> C[Silver Layer\nParsing + Cleaning + QC]
+D --> J["Visualization Datasets"]
+J --> K["Dashboards and Plots"]
 
-C --> D[Gold Layer\nAnalytics Tables]
+E --> L["DuckDB Benchmark"]
+E --> M["Spark Benchmark"]
 
-D --> E[Feature Engineering]
-
-E --> F[ML Training]
-
-F --> G[Model Registry]
-
-G --> H[Batch Inference]
-
-H --> I[Forecast Outputs]
-
-D --> J[Visualization Datasets]
-
-J --> K[Dashboards / Plots]
-
-E --> L[DuckDB Benchmark]
-
-E --> M[Spark Benchmark]
-
-subgraph Orchestration
-N[Airflow DAG]
-end
-
-N --> B
+N["Airflow DAG"] --> B
 N --> C
 N --> D
 N --> E
