@@ -1,7 +1,7 @@
 # Wind Energy Forecasting Pipeline
 
 A scalable, end-to-end wind energy forecasting pipeline built on NOAA Integrated Surface Database (ISD) data.  
-Designed for big data processing with PySpark, config-driven cloud execution, and reproducibility across local and distributed environments.
+Designed for **big data processing with PySpark**, **config-driven cloud execution**, and **reproducibility across local and distributed environments**.
 
 ---
 
@@ -50,25 +50,25 @@ Designed for big data processing with PySpark, config-driven cloud execution, an
 
 ## Core Fields in Scope
 
-- WND → wind speed & direction (primary target field)  
-- TMP → temperature  
-- DEW → dew point  
-- VIS → visibility  
-- CIG → ceiling  
-- SLP → pressure  
-- DATE → true timestamp (used for all time logic)  
+- **WND** → wind speed & direction (primary target field)  
+- **TMP** → temperature  
+- **DEW** → dew point  
+- **VIS** → visibility  
+- **CIG** → ceiling  
+- **SLP** → pressure  
+- **DATE** → true timestamp (used for all time logic)  
 
 ---
 
 ## Important Notes
 
-- S3 file timestamps are not data timestamps  
-- Always use the DATE column for time-based analysis  
-- Many weather fields are encoded strings and require parsing  
-- The dataset is wide and sparse, so optional fields are excluded from v1  
-- Wind is the primary modeling target  
-- Auxiliary weather fields are secondary  
-- Solar is out of scope  
+- S3 file timestamps are **not data timestamps**  
+- Always use the `DATE` column for time-based analysis  
+- Many weather fields are **encoded strings and require parsing**  
+- The dataset is **wide and sparse**, so optional fields are excluded from v1  
+- Wind is the **primary modeling target**  
+- Auxiliary weather fields are **secondary**  
+- Solar is **out of scope**  
 
 ---
 
@@ -106,19 +106,19 @@ outputs/         → generated artifacts (gitignored)
 
 ## Setup (uv workflow)
 
-### Install dependencies
+Install dependencies:
 
 ```bash
 uv sync
 ````
 
-### Activate environment
+Activate environment:
 
 ```bash
 source .venv/bin/activate
 ```
 
-### Verify
+Verify:
 
 ```bash
 which python
@@ -128,7 +128,7 @@ which python
 
 ## Configuration System
 
-This project is fully config-driven to support multiple users and environments.
+This project is fully **config-driven** to support multiple users and environments.
 
 ### Never hardcode
 
@@ -187,10 +187,15 @@ export PROJECT_USER_CONFIG=configs/users/syed.yaml
 
 ## Pipeline Summary
 
-This project implements a full data pipeline:
-
 ```
-raw NOAA data → parsing → cleaning → enrichment → aggregation → analytics → ML-ready data
+raw NOAA data
+→ parsing
+→ cleaning
+→ enrichment
+→ aggregation
+→ analytics
+→ feature engineering
+→ ML-ready data
 ```
 
 ---
@@ -203,10 +208,12 @@ raw NOAA data → parsing → cleaning → enrichment → aggregation → analyt
 * Each file = station-year
 * Each row = timestamped observation
 
+---
+
 ### Cleaning and Parsing
 
 * Encoded fields parsed into numeric values
-* Sentinel values (9999, +9999, etc.) converted to NULL
+* Sentinel values (`9999`, `+9999`, etc.) → NULL
 * Quality control filters applied
 * Units standardized (m/s, °C, hPa)
 * Station metadata joined for geographic context
@@ -222,7 +229,7 @@ raw NOAA data → parsing → cleaning → enrichment → aggregation → analyt
 * Handles missing files
 * Small-file problem mitigated
 
-Output:
+**Output:**
 
 ```
 s3a://<user-bucket>/bronze/isd
@@ -237,12 +244,12 @@ s3a://<user-bucket>/bronze/isd
 * Unit standardization
 * Metadata enrichment
 
-Partitioning:
+**Partitioning:**
 
 * year
 * state
 
-Output:
+**Output:**
 
 ```
 s3a://<user-bucket>/silver/weather
@@ -256,7 +263,9 @@ s3a://<user-bucket>/silver/weather
 
 Wind potential is measured using **capacity factor**, defined as:
 
-> normalized wind energy output between 0 and 1
+```
+normalized wind energy output between 0 and 1
+```
 
 Interpretation:
 
@@ -269,10 +278,10 @@ Interpretation:
 
 ### Wind Physics Modeling
 
-* turbine-inspired power curve
-* cut-in, rated, cut-out speeds
-* wind power density calculation
-* normalized output bounded in [0, 1]
+* Turbine-inspired power curve
+* Cut-in, rated, cut-out speeds
+* Wind power density calculation
+* Normalized output bounded in [0, 1]
 * Spark-native implementation (no Python UDFs)
 
 ---
@@ -287,11 +296,12 @@ s3a://<user-bucket>/gold/wind/analytics/daily_region
 
 * Grain: state-date
 * Primary analysis table
-* Used for:
 
-  * stability analysis
-  * distribution analysis
-  * ML feature generation
+Used for:
+
+* stability analysis
+* distribution analysis
+* ML feature generation
 
 ---
 
@@ -302,11 +312,12 @@ s3a://<user-bucket>/gold/wind/analytics/monthly_state
 ```
 
 * Grain: state-year-month
-* Used for:
 
-  * seasonal trends
-  * geographic comparisons
-  * presentation and reporting
+Used for:
+
+* seasonal trends
+* geographic comparisons
+* reporting
 
 ---
 
@@ -316,16 +327,19 @@ s3a://<user-bucket>/gold/wind/analytics/monthly_state
 s3a://<user-bucket>/gold/wind/analytics/extreme_events
 ```
 
-* Identifies:
+Identifies:
 
-  * high wind (top 10%)
-  * low wind (bottom 10%)
-* Includes:
+* high wind (top 10%)
+* low wind (bottom 10%)
 
-  * z-score normalization
-  * state-specific thresholds
+Includes:
+
+* z-score normalization
+* state-specific thresholds
 
 ---
+
+## Machine Learning Tables
 
 ### ML Base Table
 
@@ -333,15 +347,39 @@ s3a://<user-bucket>/gold/wind/analytics/extreme_events
 s3a://<user-bucket>/gold/wind/ml/base
 ```
 
-* Target:
+* Target: next-day wind potential
+* Contains core engineered aggregates
 
-  * next-day wind potential
-* Features:
+---
 
-  * lag features (1d, 7d)
-  * rolling statistics
-  * seasonal features
-  * regional aggregates
+### Feature Table (Layer 8 Output)
+
+```
+s3a://<user-bucket>/gold/wind/ml/features
+```
+
+Includes:
+
+* Lag features (1d, 2d, 3d, 7d, 14d, 30d)
+* Rolling statistics (mean, min, max, stddev)
+* Temporal features (month, season, etc.)
+* Weather aggregates
+
+---
+
+### Training Tables
+
+```
+s3a://<user-bucket>/gold/wind/ml/train
+s3a://<user-bucket>/gold/wind/ml/validation
+s3a://<user-bucket>/gold/wind/ml/test
+```
+
+Split by time:
+
+* Train: ≤ 2019-12-31
+* Validation: 2020–2022
+* Test: ≥ 2023
 
 ---
 
@@ -356,6 +394,7 @@ s3a://<user-bucket>/gold/wind/ml/base
 * monthly state: 17,664
 * extreme events: 537,449
 * ML base: 537,401
+* ML features: 537,401
 
 ---
 
@@ -372,21 +411,22 @@ s3a://<user-bucket>/gold/wind/ml/base
 * expected lag nulls (boundary effects only)
 * no invalid physical values
 
-### Extreme events
+### Feature engineering validation (Layer 8)
 
-* high wind ≈ 10%
-* low wind ≈ 10%
-* normal ≈ 80%
+* no future leakage
+* rolling windows exclude current row
+* time-based splits strictly enforced
+* feature distributions stable across splits
 
 ---
 
 ## Key Insights
 
-* Wind potential is **geographically concentrated** (Great Plains dominate)
-* Wind follows a **strong seasonal cycle**
-* Wind distribution is **right-skewed**
+* Wind potential is geographically concentrated (Great Plains dominate)
+* Wind follows a strong seasonal cycle
+* Wind distribution is right-skewed
 * Most days have moderate wind, extreme events are rare
-* Wind is **predictable but not constant**, requiring forecasting
+* Wind is predictable but not constant, requiring forecasting
 
 ---
 
@@ -404,7 +444,7 @@ s3a://<user-bucket>/gold/wind/ml/base
 
 ## Final Note
 
-This project follows a production-grade data pipeline design:
+This project follows a **production-grade data pipeline design**:
 
 * local-first validation
 * distributed execution readiness
@@ -413,7 +453,7 @@ This project follows a production-grade data pipeline design:
 * physically informed wind modeling
 * scalable analytics and ML datasets
 
-The pipeline produces **reliable, large-scale wind energy datasets** ready for:
+The pipeline produces reliable, large-scale wind energy datasets ready for:
 
 * descriptive analysis
 * visualization
