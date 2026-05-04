@@ -1,0 +1,40 @@
+x-airflow-common:
+  &airflow-common
+  image: apache/airflow:2.9.1
+  environment:
+    &airflow-common-env
+    AIRFLOW__CORE__EXECUTOR: SequentialExecutor
+    AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
+    AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'true'
+    AIRFLOW__CORE__FERNET_KEY: ''
+    AIRFLOW__CORE__DAGBAG_IMPORT_TIMEOUT: 60
+    AIRFLOW__WEBSERVER__SECRET_KEY: 'dev'
+    AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: sqlite:////opt/airflow/airflow_db/airflow.db
+    PROJECT_USER_CONFIG: ${PROJECT_USER_CONFIG}
+  volumes:
+    - ./infra/airflow/dags:/opt/airflow/dags
+    - ./scripts:/opt/airflow/scripts
+    - ./:/opt/airflow/project
+    - ./infra/airflow/db:/opt/airflow/airflow_db
+  working_dir: /opt/airflow/project
+
+services:
+  airflow-webserver:
+    <<: *airflow-common
+    command: webserver
+    ports:
+      - "8081:8080"
+    depends_on:
+      - airflow-init
+
+  airflow-scheduler:
+    <<: *airflow-common
+    command: scheduler
+    depends_on:
+      - airflow-init
+
+  airflow-init:
+    <<: *airflow-common
+    command: >
+      bash -c "airflow db migrate &&
+      airflow users create --username admin --password admin --firstname admin --lastname user --role Admin --email admin@example.com"
