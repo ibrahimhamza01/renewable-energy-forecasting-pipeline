@@ -12,11 +12,44 @@ split:
   test_start: "2023-01-01"
 
 target:
-  name: capacity_factor
+  name: next_day_daily_region_capacity_factor
   horizon_days: 1
+
+features:
+  exclude_columns:
+    - date_utc
+    - date
+    - split
+    - state
+    - next_day_daily_region_capacity_factor
 
 write:
   format: parquet
   mode: overwrite
   partition_by:
     - split
+
+models:
+  baseline:
+    strategy: mean
+
+  linear_regression:
+    max_iter: 50
+    reg_param: 0.0
+    elastic_net_param: 0.0
+
+  random_forest:
+    num_trees: 50
+    max_depth: 8
+    seed: 42
+
+  gbt:
+    max_iter: 50
+    max_depth: 5
+    step_size: 0.1
+    seed: 42
+
+evaluation:
+  metrics:
+    - rmse
+    - mae
