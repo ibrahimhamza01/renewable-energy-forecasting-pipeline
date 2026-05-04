@@ -50,7 +50,7 @@ N --> D
 N --> E
 N --> F
 N --> H
-```
+````
 
 ---
 
@@ -395,6 +395,8 @@ final_tuned_gbt
 * RMSE ≈ 0.042
 * MAE ≈ 0.025
 
+![Forecast vs Actual](./outputs/figures/forecast_vs_actual.png)
+
 ---
 
 ## Model Registry
@@ -567,6 +569,22 @@ Spark:
 
 * large-scale pipelines
 * production workloads
+
+---
+
+# Final Visual Outputs
+
+## U.S. Wind Potential Map
+
+![U.S. Wind Potential Map](./outputs/figures/us_wind_potential_map.png)
+
+## Regional Wind Potential Trends
+
+![Regional Wind Potential Trends](./outputs/figures/regional_wind_trends.png)
+
+## Seasonal Wind Potential
+
+![Seasonal Wind Potential](./outputs/figures/seasonal_trends.png)
 
 ---
 
