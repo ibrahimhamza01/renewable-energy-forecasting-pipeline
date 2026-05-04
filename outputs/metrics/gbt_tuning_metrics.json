@@ -1,0 +1,321 @@
+{
+  "run_timestamp_utc": "2026-05-04T06:03:19.448390+00:00",
+  "training_config": "configs/modeling/training_config.yaml",
+  "target": {
+    "name": "next_day_daily_region_capacity_factor",
+    "horizon_days": 1
+  },
+  "datasets": {
+    "train_table": "s3a://syed-datsbd-s2026/gold/wind/ml/train",
+    "validation_table": "s3a://syed-datsbd-s2026/gold/wind/ml/validation"
+  },
+  "feature_count": 46,
+  "feature_columns": [
+    "month",
+    "day_of_year",
+    "day_of_month",
+    "day_of_week",
+    "daily_region_capacity_factor",
+    "mean_region_wind_speed_ms",
+    "avg_station_wind_speed_std_ms",
+    "daily_wind_speed_range_ms",
+    "station_count",
+    "total_hourly_observations",
+    "cf_lag_1d",
+    "cf_lag_2d",
+    "cf_lag_3d",
+    "cf_lag_7d",
+    "cf_rolling_3d_mean",
+    "cf_rolling_3d_std",
+    "cf_rolling_7d_mean",
+    "cf_rolling_7d_std",
+    "state_long_run_avg_cf",
+    "state_long_run_volatility",
+    "year",
+    "daily_region_capacity_factor_lag_1d",
+    "daily_region_capacity_factor_lag_2d",
+    "daily_region_capacity_factor_lag_3d",
+    "daily_region_capacity_factor_lag_7d",
+    "daily_region_capacity_factor_lag_14d",
+    "daily_region_capacity_factor_lag_30d",
+    "daily_region_capacity_factor_lag_1d_minus_lag_7d",
+    "daily_region_capacity_factor_lag_1d_minus_lag_14d",
+    "daily_region_capacity_factor_lag_1d_minus_lag_30d",
+    "daily_region_capacity_factor_rolling_3d_mean",
+    "daily_region_capacity_factor_rolling_3d_min",
+    "daily_region_capacity_factor_rolling_3d_max",
+    "daily_region_capacity_factor_rolling_3d_stddev",
+    "daily_region_capacity_factor_rolling_7d_mean",
+    "daily_region_capacity_factor_rolling_7d_min",
+    "daily_region_capacity_factor_rolling_7d_max",
+    "daily_region_capacity_factor_rolling_7d_stddev",
+    "daily_region_capacity_factor_rolling_14d_mean",
+    "daily_region_capacity_factor_rolling_14d_min",
+    "daily_region_capacity_factor_rolling_14d_max",
+    "daily_region_capacity_factor_rolling_14d_stddev",
+    "daily_region_capacity_factor_rolling_30d_mean",
+    "daily_region_capacity_factor_rolling_30d_min",
+    "daily_region_capacity_factor_rolling_30d_max",
+    "daily_region_capacity_factor_rolling_30d_stddev"
+  ],
+  "baseline": {
+    "model_name": "baseline_mean",
+    "prediction_value": 0.04304203873269995,
+    "metrics": {
+      "rmse": 0.05807741602045601,
+      "mae": 0.03744208326183717
+    }
+  },
+  "model": "gbt",
+  "selection_metric": "validation_rmse",
+  "candidate_count": 18,
+  "best_result": {
+    "params": {
+      "max_iter": 80,
+      "max_depth": 5,
+      "step_size": 0.05,
+      "seed": 42
+    },
+    "metrics": {
+      "rmse": 0.04650445810648858,
+      "mae": 0.027172445083575716
+    },
+    "training_seconds": 117.90732288360596
+  },
+  "all_results": [
+    {
+      "params": {
+        "max_iter": 80,
+        "max_depth": 5,
+        "step_size": 0.05,
+        "seed": 42
+      },
+      "metrics": {
+        "rmse": 0.04650445810648858,
+        "mae": 0.027172445083575716
+      },
+      "training_seconds": 117.90732288360596
+    },
+    {
+      "params": {
+        "max_iter": 80,
+        "max_depth": 3,
+        "step_size": 0.1,
+        "seed": 42
+      },
+      "metrics": {
+        "rmse": 0.04653563329089327,
+        "mae": 0.0272653657235895
+      },
+      "training_seconds": 69.28977131843567
+    },
+    {
+      "params": {
+        "max_iter": 50,
+        "max_depth": 7,
+        "step_size": 0.05,
+        "seed": 42
+      },
+      "metrics": {
+        "rmse": 0.04654668684541781,
+        "mae": 0.027189557648880428
+      },
+      "training_seconds": 123.7910828590393
+    },
+    {
+      "params": {
+        "max_iter": 50,
+        "max_depth": 5,
+        "step_size": 0.1,
+        "seed": 42
+      },
+      "metrics": {
+        "rmse": 0.0465557600220508,
+        "mae": 0.027167568994046088
+      },
+      "training_seconds": 71.36221766471863
+    },
+    {
+      "params": {
+        "max_iter": 80,
+        "max_depth": 7,
+        "step_size": 0.05,
+        "seed": 42
+      },
+      "metrics": {
+        "rmse": 0.04655691462067379,
+        "mae": 0.027161514251644515
+      },
+      "training_seconds": 221.35108923912048
+    },
+    {
+      "params": {
+        "max_iter": 80,
+        "max_depth": 5,
+        "step_size": 0.1,
+        "seed": 42
+      },
+      "metrics": {
+        "rmse": 0.046596099189107086,
+        "mae": 0.0270483852556064
+      },
+      "training_seconds": 118.1536111831665
+    },
+    {
+      "params": {
+        "max_iter": 30,
+        "max_depth": 7,
+        "step_size": 0.05,
+        "seed": 42
+      },
+      "metrics": {
+        "rmse": 0.0466297380379633,
+        "mae": 0.027318504389002147
+      },
+      "training_seconds": 74.49466705322266
+    },
+    {
+      "params": {
+        "max_iter": 30,
+        "max_depth": 5,
+        "step_size": 0.1,
+        "seed": 42
+      },
+      "metrics": {
+        "rmse": 0.04663924975738095,
+        "mae": 0.027321877429706765
+      },
+      "training_seconds": 46.671072006225586
+    },
+    {
+      "params": {
+        "max_iter": 50,
+        "max_depth": 5,
+        "step_size": 0.05,
+        "seed": 42
+      },
+      "metrics": {
+        "rmse": 0.046661759593076745,
+        "mae": 0.027364165038879326
+      },
+      "training_seconds": 72.63335466384888
+    },
+    {
+      "params": {
+        "max_iter": 30,
+        "max_depth": 7,
+        "step_size": 0.1,
+        "seed": 42
+      },
+      "metrics": {
+        "rmse": 0.04677384833115095,
+        "mae": 0.02721544330702243
+      },
+      "training_seconds": 71.31104707717896
+    },
+    {
+      "params": {
+        "max_iter": 50,
+        "max_depth": 3,
+        "step_size": 0.1,
+        "seed": 42
+      },
+      "metrics": {
+        "rmse": 0.04682887870241927,
+        "mae": 0.02751314822744573
+      },
+      "training_seconds": 44.962987184524536
+    },
+    {
+      "params": {
+        "max_iter": 30,
+        "max_depth": 5,
+        "step_size": 0.05,
+        "seed": 42
+      },
+      "metrics": {
+        "rmse": 0.04686254834859123,
+        "mae": 0.027547875098751794
+      },
+      "training_seconds": 49.242664098739624
+    },
+    {
+      "params": {
+        "max_iter": 50,
+        "max_depth": 7,
+        "step_size": 0.1,
+        "seed": 42
+      },
+      "metrics": {
+        "rmse": 0.04695820166326997,
+        "mae": 0.027263588836320105
+      },
+      "training_seconds": 122.61038446426392
+    },
+    {
+      "params": {
+        "max_iter": 80,
+        "max_depth": 3,
+        "step_size": 0.05,
+        "seed": 42
+      },
+      "metrics": {
+        "rmse": 0.04698298771458198,
+        "mae": 0.027643892297392073
+      },
+      "training_seconds": 70.04607081413269
+    },
+    {
+      "params": {
+        "max_iter": 30,
+        "max_depth": 3,
+        "step_size": 0.1,
+        "seed": 42
+      },
+      "metrics": {
+        "rmse": 0.047110089750048906,
+        "mae": 0.027782045068641868
+      },
+      "training_seconds": 33.318031787872314
+    },
+    {
+      "params": {
+        "max_iter": 50,
+        "max_depth": 3,
+        "step_size": 0.05,
+        "seed": 42
+      },
+      "metrics": {
+        "rmse": 0.04724766475681698,
+        "mae": 0.027917965644185607
+      },
+      "training_seconds": 45.70884323120117
+    },
+    {
+      "params": {
+        "max_iter": 80,
+        "max_depth": 7,
+        "step_size": 0.1,
+        "seed": 42
+      },
+      "metrics": {
+        "rmse": 0.04727721253587479,
+        "mae": 0.02744992300708301
+      },
+      "training_seconds": 217.57223296165466
+    },
+    {
+      "params": {
+        "max_iter": 30,
+        "max_depth": 3,
+        "step_size": 0.05,
+        "seed": 42
+      },
+      "metrics": {
+        "rmse": 0.047614011100382395,
+        "mae": 0.02823840001298216
+      },
+      "training_seconds": 66.47588348388672
+    }
+  ]
+}

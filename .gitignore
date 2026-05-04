@@ -27,10 +27,8 @@ Thumbs.db
 .env
 
 # Project outputs
-outputs/
-!outputs/*.png
-reports/interim/
-reports/final/
+outputs/station_master_contiguous_us.csv
+outputs/benchmark_results/
 
 # Spark / local runtime artifacts
 spark-warehouse/

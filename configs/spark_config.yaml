@@ -1,22 +1,19 @@
 spark:
-  app_name: renewable-energy-forecasting-pipeline-cluster
-  master: local[*]
+  app_name: renewable-energy-forecasting-pipeline-local
+  master: "local[*]"
 
   config:
-    spark.sql.session.timeZone: UTC
-    spark.sql.shuffle.partitions: 32
-    spark.default.parallelism: 32
-    spark.sql.execution.arrow.pyspark.enabled: false
+    spark.sql.session.timeZone: "UTC"
+    spark.sql.shuffle.partitions: "32"
+    spark.default.parallelism: "32"
+    spark.sql.execution.arrow.pyspark.enabled: "false"
 
-    spark.driver.memory: 8g
-    spark.executor.memory: 6g
-    spark.executor.cores: 2
-    spark.cores.max: 8
+    spark.driver.memory: "8g"
 
-    spark.sql.parquet.compression.codec: snappy
+    spark.sql.parquet.compression.codec: "snappy"
 
-    spark.jars.packages: org.apache.hadoop:hadoop-aws:3.3.4
+    spark.jars.packages: "org.apache.hadoop:hadoop-aws:3.3.4"
 
-    spark.hadoop.fs.s3a.impl: org.apache.hadoop.fs.s3a.S3AFileSystem
-    spark.hadoop.fs.s3a.aws.credentials.provider: com.amazonaws.auth.InstanceProfileCredentialsProvider
-    spark.hadoop.fs.s3a.path.style.access: false
+    spark.hadoop.fs.s3a.impl: "org.apache.hadoop.fs.s3a.S3AFileSystem"
+    spark.hadoop.fs.s3a.aws.credentials.provider: "com.amazonaws.auth.InstanceProfileCredentialsProvider"
+    spark.hadoop.fs.s3a.path.style.access: "false"

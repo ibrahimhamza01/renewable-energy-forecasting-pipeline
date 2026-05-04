@@ -1,0 +1,86 @@
+{
+  "run_timestamp_utc": "2026-05-04T03:17:49.691820+00:00",
+  "training_config": "configs/modeling/training_config.yaml",
+  "target": {
+    "name": "next_day_daily_region_capacity_factor",
+    "horizon_days": 1
+  },
+  "datasets": {
+    "train_table": "s3a://syed-datsbd-s2026/gold/wind/ml/train",
+    "validation_table": "s3a://syed-datsbd-s2026/gold/wind/ml/validation"
+  },
+  "models": {
+    "baseline": {
+      "model_name": "baseline_mean",
+      "model_type": "constant_mean_predictor",
+      "prediction_value": 0.043042038732699954,
+      "metrics": {
+        "rmse": 0.05807741602045601,
+        "mae": 0.03744208326183717
+      }
+    },
+    "gbt": {
+      "model_name": "gbt",
+      "model_type": "spark_ml_gradient_boosted_trees_regressor",
+      "feature_count": 46,
+      "feature_columns": [
+        "month",
+        "day_of_year",
+        "day_of_month",
+        "day_of_week",
+        "daily_region_capacity_factor",
+        "mean_region_wind_speed_ms",
+        "avg_station_wind_speed_std_ms",
+        "daily_wind_speed_range_ms",
+        "station_count",
+        "total_hourly_observations",
+        "cf_lag_1d",
+        "cf_lag_2d",
+        "cf_lag_3d",
+        "cf_lag_7d",
+        "cf_rolling_3d_mean",
+        "cf_rolling_3d_std",
+        "cf_rolling_7d_mean",
+        "cf_rolling_7d_std",
+        "state_long_run_avg_cf",
+        "state_long_run_volatility",
+        "year",
+        "daily_region_capacity_factor_lag_1d",
+        "daily_region_capacity_factor_lag_2d",
+        "daily_region_capacity_factor_lag_3d",
+        "daily_region_capacity_factor_lag_7d",
+        "daily_region_capacity_factor_lag_14d",
+        "daily_region_capacity_factor_lag_30d",
+        "daily_region_capacity_factor_lag_1d_minus_lag_7d",
+        "daily_region_capacity_factor_lag_1d_minus_lag_14d",
+        "daily_region_capacity_factor_lag_1d_minus_lag_30d",
+        "daily_region_capacity_factor_rolling_3d_mean",
+        "daily_region_capacity_factor_rolling_3d_min",
+        "daily_region_capacity_factor_rolling_3d_max",
+        "daily_region_capacity_factor_rolling_3d_stddev",
+        "daily_region_capacity_factor_rolling_7d_mean",
+        "daily_region_capacity_factor_rolling_7d_min",
+        "daily_region_capacity_factor_rolling_7d_max",
+        "daily_region_capacity_factor_rolling_7d_stddev",
+        "daily_region_capacity_factor_rolling_14d_mean",
+        "daily_region_capacity_factor_rolling_14d_min",
+        "daily_region_capacity_factor_rolling_14d_max",
+        "daily_region_capacity_factor_rolling_14d_stddev",
+        "daily_region_capacity_factor_rolling_30d_mean",
+        "daily_region_capacity_factor_rolling_30d_min",
+        "daily_region_capacity_factor_rolling_30d_max",
+        "daily_region_capacity_factor_rolling_30d_stddev"
+      ],
+      "hyperparameters": {
+        "max_iter": 50,
+        "max_depth": 5,
+        "step_size": 0.1,
+        "seed": 42
+      },
+      "metrics": {
+        "rmse": 0.046585201039092854,
+        "mae": 0.02720615263799107
+      }
+    }
+  }
+}
