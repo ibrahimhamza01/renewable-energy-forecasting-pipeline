@@ -11,7 +11,7 @@ Designed for big data processing with PySpark, config-driven cloud execution, an
 - Process NOAA ISD hourly meteorological data (~600GB) at scale using Spark
 - Convert raw weather observations into wind energy potential estimates
 - Develop machine learning models for short-term wind forecasting (24–72 hours)
-- Compare distributed vs single-node systems (Spark vs DuckDB)
+- **Benchmark distributed vs single-node systems (Spark vs DuckDB)**
 - Ensure reproducibility across different users’ cloud environments (S3 + EC2)
 - **Orchestrate the entire pipeline using Apache Airflow (production-style scheduling layer)**
 
@@ -481,28 +481,15 @@ Airflow UI provides:
 - Task dependencies
 - Execution state (success/failure)
 
----
-
 ### Gantt View
 
 - Task execution timeline
 - Performance insights
 
----
-
 ### Logs
 
 - Per-task execution details
 - Debugging information
-
-Example:
-
-```
-
-[DRY RUN] Skipping bronze layer
-Command exited with return code 0
-
-```
 
 ---
 
@@ -513,6 +500,87 @@ Command exited with return code 0
 - DAGs must support both dry-run and full execution
 - Orchestration is separate from business logic
 - Config-driven pipelines simplify multi-user environments
+
+---
+
+# Layer 12 — Benchmarking: DuckDB vs Spark
+
+## Overview
+
+This layer evaluates compute tradeoffs between single-node and distributed execution using representative pipeline workloads.
+
+---
+
+## Benchmark Tasks
+
+- Filtering by year and region
+- Daily regional wind aggregation
+- Grouped temporal summaries
+- (Optional) station metadata joins
+
+All tasks are implemented with equivalent logic in both DuckDB and Spark.
+
+---
+
+## Implementation
+
+### DuckDB (Single-node)
+
+- Runs locally on exported Parquet subsets
+- Optimized for fast analytical queries
+- Minimal startup overhead
+
+### Spark (Distributed)
+
+- Runs on Spark (local or EC2 cluster)
+- Includes job scheduling and execution overhead
+- Designed for large-scale distributed workloads
+
+---
+
+## Benchmark Execution
+
+Single command to run full benchmark pipeline:
+
+```
+
+./scripts/run_benchmarks.sh
+
+```
+
+Outputs:
+
+```
+
+outputs/benchmark_results/
+├── duckdb_benchmarks.csv
+├── spark_benchmarks.csv
+├── benchmark_comparison.csv
+
+```
+
+---
+
+## Key Results
+
+- DuckDB significantly outperforms Spark on small local datasets
+- Spark incurs startup and scheduling overhead
+- Spark performance improves on warm runs
+- Spark becomes necessary for large-scale S3-based processing
+
+---
+
+## Interpretation
+
+- DuckDB is best for:
+  - local analysis
+  - development iteration
+  - small-to-medium datasets
+
+- Spark is best for:
+  - large-scale distributed workloads
+  - multi-year NOAA ISD processing
+  - production pipelines and orchestration
 
 ---
 
@@ -538,6 +606,7 @@ This project implements a **production-grade data + ML + orchestration pipeline*
 - Physics-informed modeling
 - End-to-end ML + inference system
 - **Airflow-based orchestration layer**
+- **Cross-engine benchmarking (DuckDB vs Spark)**
 
 ---
 
@@ -550,6 +619,7 @@ The pipeline produces:
 - Trained models
 - Versioned model registry
 - Production-style forecast outputs
+- Benchmark comparison results
 - **Orchestrated execution via Airflow DAGs**
 
 ---
