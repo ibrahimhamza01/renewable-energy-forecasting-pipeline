@@ -1,46 +1,46 @@
 # Wind Energy Forecasting Pipeline
 
 A scalable, end-to-end wind energy forecasting pipeline built on NOAA Integrated Surface Database (ISD) data.  
-Designed for **big data processing with PySpark**, **config-driven cloud execution**, and **reproducibility across local and distributed environments**.
+Designed for big data processing with PySpark, config-driven cloud execution, and reproducibility across local and distributed environments.
 
 ---
 
-## Project Goals
+# Project Goals
 
-- Build an end-to-end distributed data pipeline for wind energy forecasting  
-- Process NOAA ISD hourly meteorological data (~600GB) at scale using Spark  
-- Convert raw weather observations into wind energy potential estimates  
-- Develop machine learning models for short-term wind forecasting (24–72 hours)  
-- Compare distributed vs single-node systems (Spark vs DuckDB)  
-- Ensure reproducibility across different users’ cloud environments (S3 + EC2)  
-
----
-
-## Dataset: NOAA Integrated Surface Database (ISD)
-
-- **Source:** NOAA ISD (AWS Open Data)  
-- **Format:** CSV (wide schema with encoded fields)  
-- **Scale:** 600GB+ uncompressed  
-
-### Coverage
-
-- Global stations (~35,000)  
-- Hourly observations  
-- Years: 1901–2025  
+- Build an end-to-end distributed data pipeline for wind energy forecasting
+- Process NOAA ISD hourly meteorological data (~600GB) at scale using Spark
+- Convert raw weather observations into wind energy potential estimates
+- Develop machine learning models for short-term wind forecasting (24–72 hours)
+- Compare distributed vs single-node systems (Spark vs DuckDB)
+- Ensure reproducibility across different users’ cloud environments (S3 + EC2)
 
 ---
 
-## Project Scope
+# Dataset: NOAA Integrated Surface Database (ISD)
 
-### Geographic scope
+- **Source:** NOAA ISD (AWS Open Data)
+- **Format:** CSV (wide schema with encoded fields)
+- **Scale:** 600GB+ uncompressed
+
+## Coverage
+
+- Global stations (~35,000)
+- Hourly observations
+- Years: 1901–2025
+
+---
+
+# Project Scope
+
+## Geographic scope
 
 - Contiguous U.S.
 
-### Large-scale project window
+## Large-scale project window
 
 - 1995–2025
 
-### Local development subset
+## Local development subset
 
 - states: CA, TX, MN, FL  
 - years: 2018–2020  
@@ -48,44 +48,44 @@ Designed for **big data processing with PySpark**, **config-driven cloud executi
 
 ---
 
-## Core Fields in Scope
+# Core Fields in Scope
 
-- **WND** → wind speed & direction (primary target field)  
-- **TMP** → temperature  
-- **DEW** → dew point  
-- **VIS** → visibility  
-- **CIG** → ceiling  
-- **SLP** → pressure  
-- **DATE** → true timestamp (used for all time logic)  
+- `WND` → wind speed & direction (primary target field)
+- `TMP` → temperature
+- `DEW` → dew point
+- `VIS` → visibility
+- `CIG` → ceiling
+- `SLP` → pressure
+- `DATE` → true timestamp (used for all time logic)
 
 ---
 
-## Important Notes
+# Important Notes
 
-- S3 file timestamps are **not data timestamps**  
+- S3 file timestamps are **not** data timestamps  
 - Always use the `DATE` column for time-based analysis  
-- Many weather fields are **encoded strings and require parsing**  
-- The dataset is **wide and sparse**, so optional fields are excluded from v1  
-- Wind is the **primary modeling target**  
-- Auxiliary weather fields are **secondary**  
-- Solar is **out of scope**  
+- Many weather fields are encoded strings and require parsing  
+- The dataset is wide and sparse, so optional fields are excluded from v1  
+- Wind is the primary modeling target  
+- Auxiliary weather fields are secondary  
+- Solar is out of scope  
 
 ---
 
-## Tech Stack
+# Tech Stack
 
-- Python (uv-managed environment)  
-- PySpark (distributed processing)  
-- DuckDB (single-node benchmarking)  
-- Pandas / NumPy  
-- PyArrow  
-- AWS (S3, EC2)  
-- Airflow (planned)  
-- Datashader / Plotly  
+- Python (uv-managed environment)
+- PySpark (distributed processing)
+- DuckDB (single-node benchmarking)
+- Pandas / NumPy
+- PyArrow
+- AWS (S3, EC2)
+- Airflow (planned)
+- Datashader / Plotly
 
 ---
 
-## Repository Structure
+# Repository Structure
 
 ```
 
@@ -100,94 +100,103 @@ tests/           → unit tests
 docs/            → architecture, experiments, presentation materials
 outputs/         → generated artifacts (gitignored)
 
-````
+```
 
 ---
 
-## Setup (uv workflow)
+# Setup (uv workflow)
 
-Install dependencies:
+## Install dependencies
 
-```bash
+```
+
 uv sync
-````
 
-Activate environment:
+```
 
-```bash
+## Activate environment
+
+```
+
 source .venv/bin/activate
+
 ```
 
-Verify:
+## Verify
 
-```bash
+```
+
 which python
+
 ```
 
 ---
 
-## Configuration System
+# Configuration System
 
-This project is fully **config-driven** to support multiple users and environments.
+This project is fully config-driven to support multiple users and environments.
 
-### Never hardcode
+## Never hardcode
 
-* S3 bucket names
-* EC2 hostnames
-* Spark master URLs
-* Local directories
-* Output paths
+- S3 bucket names
+- EC2 hostnames
+- Spark master URLs
+- Local directories
+- Output paths
 
 ---
 
-### Configuration layers
+## Configuration layers
 
-#### 1. Shared config (`configs/`)
+### 1. Shared config (`configs/`)
 
 Defines:
 
-* dataset paths
-* Spark settings
-* project defaults
+- dataset paths
+- Spark settings
+- project defaults
 
 Examples:
 
-* `configs/paths.yaml`
-* `configs/spark_config.yaml`
+- `configs/paths.yaml`
+- `configs/spark_config.yaml`
 
 ---
 
-#### 2. User config (`configs/users/<name>.yaml`)
+### 2. User config (`configs/users/<name>.yaml`)
 
 Defines:
 
-* AWS project bucket
-* EC2 host + SSH access
-* Spark master URL
-* local runtime paths
+- AWS project bucket
+- EC2 host + SSH access
+- Spark master URL
+- local runtime paths
 
 ---
 
-#### 3. Active config
+### 3. Active config
 
-```bash
+```
+
 export PROJECT_USER_CONFIG=configs/users/syed.yaml
+
 ```
 
 ---
 
-## Development Workflow
+# Development Workflow
 
-1. Build locally on a small sample
-2. Validate with notebooks and tests
-3. Scale to Spark (EC2 + S3)
-4. Re-validate outputs
+1. Build locally on a small sample  
+2. Validate with notebooks and tests  
+3. Scale to Spark (EC2 + S3)  
+4. Re-validate outputs  
 
 ---
 
-## Pipeline Summary
+# Pipeline Summary
 
 ```
+
 raw NOAA data
 → parsing
 → cleaning
@@ -196,266 +205,380 @@ raw NOAA data
 → analytics
 → feature engineering
 → ML-ready data
+→ model training
+→ model registry
+
 ```
 
 ---
 
-## Data Processing and Outputs
+# Data Processing and Outputs
 
-### Raw Data Understanding
+## Raw Data Understanding
 
-* Data organized as `year/station.csv`
-* Each file = station-year
-* Each row = timestamped observation
-
----
-
-### Cleaning and Parsing
-
-* Encoded fields parsed into numeric values
-* Sentinel values (`9999`, `+9999`, etc.) → NULL
-* Quality control filters applied
-* Units standardized (m/s, °C, hPa)
-* Station metadata joined for geographic context
+- Data organized as `year/station.csv`
+- Each file = station-year
+- Each row = timestamped observation
 
 ---
 
-## Data Lake Structure
+## Cleaning and Parsing
 
-### Bronze Layer
+- Encoded fields parsed into numeric values
+- Sentinel values (9999, +9999, etc.) → NULL
+- Quality control filters applied
+- Units standardized (m/s, °C, hPa)
+- Station metadata joined for geographic context
 
-* Raw ingestion from NOAA S3
-* Normalized ingestion schema
-* Handles missing files
-* Small-file problem mitigated
+---
+
+# Data Lake Structure
+
+## Bronze Layer
+
+- Raw ingestion from NOAA S3
+- Normalized ingestion schema
+- Handles missing files
+- Small-file problem mitigated
 
 **Output:**
 
 ```
+
 s3a://<user-bucket>/bronze/isd
+
 ```
 
 ---
 
-### Silver Layer
+## Silver Layer
 
-* Parsed weather fields
-* QC filtering
-* Unit standardization
-* Metadata enrichment
+- Parsed weather fields
+- QC filtering
+- Unit standardization
+- Metadata enrichment
 
 **Partitioning:**
 
-* year
-* state
+- year
+- state
 
 **Output:**
 
 ```
+
 s3a://<user-bucket>/silver/weather
+
 ```
 
 ---
 
-## Wind Energy Modeling
+# Wind Energy Modeling
 
-### Wind Potential Definition
+## Wind Potential Definition
 
 Wind potential is measured using **capacity factor**, defined as:
 
-```
-normalized wind energy output between 0 and 1
-```
+> normalized wind energy output between 0 and 1
 
-Interpretation:
+### Interpretation
 
-* 0 → no usable wind
-* ~0.05 → low/moderate wind
-* ~0.10+ → strong wind
-* ~0.30+ → very strong wind
+- 0 → no usable wind  
+- ~0.05 → low/moderate wind  
+- ~0.10+ → strong wind  
+- ~0.30+ → very strong wind  
 
 ---
 
-### Wind Physics Modeling
+## Wind Physics Modeling
 
-* Turbine-inspired power curve
-* Cut-in, rated, cut-out speeds
-* Wind power density calculation
-* Normalized output bounded in [0, 1]
-* Spark-native implementation (no Python UDFs)
+- Turbine-inspired power curve
+- Cut-in, rated, cut-out speeds
+- Wind power density calculation
+- Normalized output bounded in [0, 1]
+- Spark-native implementation (no Python UDFs)
 
 ---
 
-## Final Analytical Tables (Gold Layer)
+# Final Analytical Tables (Gold Layer)
 
-### Daily Regional Wind Table
+## Daily Regional Wind Table
 
 ```
+
 s3a://<user-bucket>/gold/wind/analytics/daily_region
+
 ```
 
-* Grain: state-date
-* Primary analysis table
+- Grain: state-date  
+- Primary analysis table  
 
 Used for:
 
-* stability analysis
-* distribution analysis
-* ML feature generation
+- stability analysis  
+- distribution analysis  
+- ML feature generation  
 
 ---
 
-### Monthly State Wind Table
+## Monthly State Wind Table
 
 ```
+
 s3a://<user-bucket>/gold/wind/analytics/monthly_state
+
 ```
 
-* Grain: state-year-month
+- Grain: state-year-month  
 
 Used for:
 
-* seasonal trends
-* geographic comparisons
-* reporting
+- seasonal trends  
+- geographic comparisons  
+- reporting  
 
 ---
 
-### Extreme Event Table
+## Extreme Event Table
 
 ```
+
 s3a://<user-bucket>/gold/wind/analytics/extreme_events
+
 ```
 
 Identifies:
 
-* high wind (top 10%)
-* low wind (bottom 10%)
+- high wind (top 10%)  
+- low wind (bottom 10%)  
 
 Includes:
 
-* z-score normalization
-* state-specific thresholds
+- z-score normalization  
+- state-specific thresholds  
 
 ---
 
-## Machine Learning Tables
+# Machine Learning Tables
 
-### ML Base Table
+## ML Base Table
 
 ```
+
 s3a://<user-bucket>/gold/wind/ml/base
+
 ```
 
-* Target: next-day wind potential
-* Contains core engineered aggregates
+- Target: next-day wind potential  
+- Contains core engineered aggregates  
 
 ---
 
-### Feature Table (Layer 8 Output)
+## Feature Table (Layer 8 Output)
 
 ```
+
 s3a://<user-bucket>/gold/wind/ml/features
+
 ```
 
 Includes:
 
-* Lag features (1d, 2d, 3d, 7d, 14d, 30d)
-* Rolling statistics (mean, min, max, stddev)
-* Temporal features (month, season, etc.)
-* Weather aggregates
+- Lag features (1d, 2d, 3d, 7d, 14d, 30d)
+- Rolling statistics (mean, min, max, stddev)
+- Temporal features (month, season, etc.)
+- Weather aggregates
 
 ---
 
-### Training Tables
+## Training Tables
 
 ```
+
 s3a://<user-bucket>/gold/wind/ml/train
 s3a://<user-bucket>/gold/wind/ml/validation
 s3a://<user-bucket>/gold/wind/ml/test
+
 ```
 
 Split by time:
 
-* Train: ≤ 2019-12-31
-* Validation: 2020–2022
-* Test: ≥ 2023
+- Train: ≤ 2019-12-31  
+- Validation: 2020–2022  
+- Test: ≥ 2023  
 
 ---
 
-## Dataset Scale (Final Outputs)
+# Dataset Scale (Final Outputs)
 
-* states: 48
-* years: 31 (1995–2025)
+- states: 48  
+- years: 31 (1995–2025)
 
 ### Row counts
 
-* daily region: 537,449
-* monthly state: 17,664
-* extreme events: 537,449
-* ML base: 537,401
-* ML features: 537,401
+- daily region: 537,449  
+- monthly state: 17,664  
+- extreme events: 537,449  
+- ML base: 537,401  
+- ML features: 537,401  
 
 ---
 
-## Validation Results
+# Model Training and Selection (Layer 9)
 
-### Range checks
+## Models Trained
 
-* daily capacity factor: 0.0 → 0.900287
-* monthly capacity factor: 0.001662 → 0.274203
-
-### Data quality
-
-* no null targets in ML table
-* expected lag nulls (boundary effects only)
-* no invalid physical values
-
-### Feature engineering validation (Layer 8)
-
-* no future leakage
-* rolling windows exclude current row
-* time-based splits strictly enforced
-* feature distributions stable across splits
+- Baseline model
+- Linear Regression
+- Random Forest
+- Gradient Boosted Trees (GBT)
 
 ---
 
-## Key Insights
+## Hyperparameter Tuning (GBT)
 
-* Wind potential is geographically concentrated (Great Plains dominate)
-* Wind follows a strong seasonal cycle
-* Wind distribution is right-skewed
-* Most days have moderate wind, extreme events are rare
-* Wind is predictable but not constant, requiring forecasting
+Search space:
+
+- max_iter: [30, 50, 80]  
+- max_depth: [3, 5, 7]  
+- step_size: [0.05, 0.1]  
+
+### Best Configuration
+
+```
+
+max_iter = 80
+max_depth = 5
+step_size = 0.05
+seed = 42
+
+```
 
 ---
 
-## Key Rules
+## Final Model Performance
 
-* All paths must come from config
-* Code must be environment-agnostic
-* Always use DATE / parsed timestamp fields for time logic
-* Never rely on S3 file timestamps
-* Validate locally before scaling
-* Validate sampled outputs before full-scale execution
-* Keep business logic separate from storage/path logic
+| Metric | Value |
+|------|-------|
+| RMSE | **0.04202** |
+| MAE  | **0.02566** |
 
 ---
 
-## Final Note
+## Model Insights
 
-This project follows a **production-grade data pipeline design**:
+- Strong temporal dependence (lag features dominate)
+- Seasonality is critical (day_of_year, month)
+- Wind variability features are highly predictive
+- Regional long-term averages improve stability
 
-* local-first validation
-* distributed execution readiness
-* config-driven reproducibility
-* strict modular layering
-* physically informed wind modeling
-* scalable analytics and ML datasets
+---
 
-The pipeline produces reliable, large-scale wind energy datasets ready for:
+## Model Registry
 
-* descriptive analysis
-* visualization
-* forecasting models
-* real-world energy insights
+All models are versioned in S3:
+
+```
+
+s3a://<user-bucket>/models/registry/
+
+```
+
+### Registered Production Candidate
+
+```
+
+Model Name: final_tuned_gbt
+Version ID: final_tuned_gbt_20260504T063157Z
+Status: production_candidate
+
+```
+
+Stored metadata includes:
+
+- model artifact
+- hyperparameters
+- training window
+- feature list
+- RMSE / MAE
+- timestamp
+
+---
+
+# Validation Results
+
+## Range checks
+
+- daily capacity factor: 0.0 → 0.900287  
+- monthly capacity factor: 0.001662 → 0.274203  
+
+---
+
+## Data quality
+
+- no null targets in ML table  
+- expected lag nulls (boundary effects only)  
+- no invalid physical values  
+
+---
+
+## Feature engineering validation (Layer 8)
+
+- no future leakage  
+- rolling windows exclude current row  
+- time-based splits strictly enforced  
+- feature distributions stable across splits  
+
+---
+
+# Key Insights
+
+- Wind potential is geographically concentrated (Great Plains dominate)
+- Wind follows a strong seasonal cycle
+- Wind distribution is right-skewed
+- Most days have moderate wind, extreme events are rare
+- Wind is predictable but not constant, requiring forecasting
+
+---
+
+# Key Rules
+
+- All paths must come from config  
+- Code must be environment-agnostic  
+- Always use DATE / parsed timestamp fields for time logic  
+- Never rely on S3 file timestamps  
+- Validate locally before scaling  
+- Validate sampled outputs before full-scale execution  
+- Keep business logic separate from storage/path logic  
+
+---
+
+# Final Note
+
+This project follows a production-grade data pipeline design:
+
+- local-first validation  
+- distributed execution readiness  
+- config-driven reproducibility  
+- strict modular layering  
+- physically informed wind modeling  
+- scalable analytics and ML datasets  
+
+---
+
+# Output Capability
+
+The pipeline produces:
+
+- large-scale wind energy datasets  
+- ML-ready features  
+- trained forecasting models  
+- versioned model registry  
+
+Ready for:
+
+- descriptive analysis  
+- visualization  
+- forecasting systems  
+- real-world energy insights  
+- production deployment
