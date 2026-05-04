@@ -1,0 +1,55 @@
+{
+  "type": "struct",
+  "fields": [
+    {
+      "name": "forecast_id",
+      "type": "string",
+      "nullable": false
+    },
+    {
+      "name": "forecast_date",
+      "type": "date",
+      "nullable": false
+    },
+    {
+      "name": "region",
+      "type": "string",
+      "nullable": true
+    },
+    {
+      "name": "state",
+      "type": "string",
+      "nullable": false
+    },
+    {
+      "name": "target_name",
+      "type": "string",
+      "nullable": false
+    },
+    {
+      "name": "prediction",
+      "type": "double",
+      "nullable": false
+    },
+    {
+      "name": "model_name",
+      "type": "string",
+      "nullable": false
+    },
+    {
+      "name": "model_version",
+      "type": "string",
+      "nullable": false
+    },
+    {
+      "name": "generation_timestamp",
+      "type": "timestamp",
+      "nullable": false
+    },
+    {
+      "name": "horizon_days",
+      "type": "integer",
+      "nullable": false
+    }
+  ]
+}
