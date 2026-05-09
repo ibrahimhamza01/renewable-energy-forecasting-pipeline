@@ -1,0 +1,190 @@
+{
+  "run_timestamp_utc": "2026-05-04T06:21:14.332610+00:00",
+  "model_name": "final_tuned_gbt",
+  "feature_importance": [
+    {
+      "feature": "daily_region_capacity_factor",
+      "importance": 0.244051098035055
+    },
+    {
+      "feature": "day_of_year",
+      "importance": 0.08439755769400802
+    },
+    {
+      "feature": "avg_station_wind_speed_std_ms",
+      "importance": 0.08230558091715454
+    },
+    {
+      "feature": "daily_region_capacity_factor_rolling_30d_mean",
+      "importance": 0.08191177883109177
+    },
+    {
+      "feature": "state_long_run_volatility",
+      "importance": 0.05708329579980419
+    },
+    {
+      "feature": "state_long_run_avg_cf",
+      "importance": 0.05390466833223048
+    },
+    {
+      "feature": "cf_lag_1d",
+      "importance": 0.04800846657712132
+    },
+    {
+      "feature": "mean_region_wind_speed_ms",
+      "importance": 0.042241345841531754
+    },
+    {
+      "feature": "month",
+      "importance": 0.03786022325761487
+    },
+    {
+      "feature": "year",
+      "importance": 0.037732913890284984
+    },
+    {
+      "feature": "daily_wind_speed_range_ms",
+      "importance": 0.034469452144218427
+    },
+    {
+      "feature": "day_of_month",
+      "importance": 0.01878639230458109
+    },
+    {
+      "feature": "daily_region_capacity_factor_lag_1d_minus_lag_14d",
+      "importance": 0.01787915758219383
+    },
+    {
+      "feature": "daily_region_capacity_factor_lag_1d_minus_lag_30d",
+      "importance": 0.015372675760213596
+    },
+    {
+      "feature": "daily_region_capacity_factor_lag_1d_minus_lag_7d",
+      "importance": 0.013680095469653148
+    },
+    {
+      "feature": "cf_rolling_3d_std",
+      "importance": 0.013428208331920845
+    },
+    {
+      "feature": "daily_region_capacity_factor_rolling_3d_stddev",
+      "importance": 0.01112849849901657
+    },
+    {
+      "feature": "total_hourly_observations",
+      "importance": 0.008885473538879377
+    },
+    {
+      "feature": "station_count",
+      "importance": 0.00866280000566205
+    },
+    {
+      "feature": "daily_region_capacity_factor_rolling_30d_stddev",
+      "importance": 0.007828780553205138
+    },
+    {
+      "feature": "daily_region_capacity_factor_rolling_30d_min",
+      "importance": 0.007450922446962464
+    },
+    {
+      "feature": "daily_region_capacity_factor_lag_14d",
+      "importance": 0.006313569484793586
+    },
+    {
+      "feature": "cf_rolling_3d_mean",
+      "importance": 0.00570061146536763
+    },
+    {
+      "feature": "cf_lag_2d",
+      "importance": 0.005427256915676394
+    },
+    {
+      "feature": "cf_lag_7d",
+      "importance": 0.005306022930720402
+    },
+    {
+      "feature": "daily_region_capacity_factor_rolling_14d_mean",
+      "importance": 0.004824589512261633
+    },
+    {
+      "feature": "daily_region_capacity_factor_rolling_3d_mean",
+      "importance": 0.004513661794682415
+    },
+    {
+      "feature": "cf_rolling_7d_std",
+      "importance": 0.004199311878807378
+    },
+    {
+      "feature": "daily_region_capacity_factor_rolling_7d_mean",
+      "importance": 0.004091791407605707
+    },
+    {
+      "feature": "day_of_week",
+      "importance": 0.003995204383411914
+    },
+    {
+      "feature": "cf_lag_3d",
+      "importance": 0.003676071968366045
+    },
+    {
+      "feature": "daily_region_capacity_factor_rolling_14d_min",
+      "importance": 0.003560980575342195
+    },
+    {
+      "feature": "daily_region_capacity_factor_lag_30d",
+      "importance": 0.003428340712339648
+    },
+    {
+      "feature": "daily_region_capacity_factor_rolling_30d_max",
+      "importance": 0.0033606654090862754
+    },
+    {
+      "feature": "daily_region_capacity_factor_rolling_14d_max",
+      "importance": 0.0026899463929096184
+    },
+    {
+      "feature": "daily_region_capacity_factor_rolling_3d_max",
+      "importance": 0.002670628891807961
+    },
+    {
+      "feature": "daily_region_capacity_factor_rolling_7d_max",
+      "importance": 0.0023540572042148322
+    },
+    {
+      "feature": "cf_rolling_7d_mean",
+      "importance": 0.0021847041161748605
+    },
+    {
+      "feature": "daily_region_capacity_factor_rolling_7d_min",
+      "importance": 0.0020566363781278486
+    },
+    {
+      "feature": "daily_region_capacity_factor_rolling_7d_stddev",
+      "importance": 0.001095988053417281
+    },
+    {
+      "feature": "daily_region_capacity_factor_rolling_14d_stddev",
+      "importance": 0.0007469640224889076
+    },
+    {
+      "feature": "daily_region_capacity_factor_rolling_3d_min",
+      "importance": 0.0007336106899939008
+    },
+    {
+      "feature": "daily_region_capacity_factor_lag_1d",
+      "importance": 0.0
+    },
+    {
+      "feature": "daily_region_capacity_factor_lag_2d",
+      "importance": 0.0
+    },
+    {
+      "feature": "daily_region_capacity_factor_lag_3d",
+      "importance": 0.0
+    },
+    {
+      "feature": "daily_region_capacity_factor_lag_7d",
+      "importance": 0.0
+    }
+  ]
+}

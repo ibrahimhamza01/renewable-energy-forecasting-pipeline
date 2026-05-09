@@ -29,6 +29,7 @@ Thumbs.db
 # Project outputs
 outputs/station_master_contiguous_us.csv
 outputs/benchmark_results/
+outputs/sample_runs/
 
 # Spark / local runtime artifacts
 spark-warehouse/
