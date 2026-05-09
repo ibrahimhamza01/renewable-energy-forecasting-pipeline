@@ -1,205 +1,36 @@
-# Wind Forecasting Website
+This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
-Frontend application for the Live Wind Forecasting Platform.
+## Getting Started
 
-This website presents:
-
-- distributed Spark pipeline outputs
-- historical wind analytics
-- forecasting model results
-- benchmarking results
-- live NOAA-powered wind estimation
-- optional deployed ML inference
-
-The website is designed to function independently of EC2/S3 infrastructure after artifact export.
-
----
-
-# Frontend Stack
-
-## Core Framework
-
-- Next.js
-- React
-- TypeScript
-
-## Visualization
-
-- Plotly
-- Recharts
-- D3.js
-- Leaflet / Mapbox (optional)
-
-## Styling
-
-- Tailwind CSS
-- Framer Motion
-
-## Deployment
-
-- Vercel
-
----
-
-# Planned Website Sections
-
-## 1. Overview
-
-Landing page describing:
-
-- project goals
-- NOAA ISD dataset
-- Spark/Airflow architecture
-- major technical achievements
-
----
-
-## 2. Live Wind Explorer
-
-Interactive NOAA-powered live estimator.
-
-Features:
-
-- station selector
-- current weather observations
-- live wind potential estimate
-- power curve visualization
-- fallback mode
-
----
-
-## 3. Pipeline Architecture
-
-Detailed engineering walkthrough.
-
-Includes:
-
-- Bronze/Silver/Gold architecture
-- Airflow orchestration
-- Spark processing
-- ML training workflow
-- benchmarking design
-
----
-
-## 4. Wind Potential Results
-
-Historical analytics dashboard.
-
-Includes:
-
-- U.S. wind potential maps
-- regional trends
-- seasonal patterns
-- station-level analysis
-
----
-
-## 5. Forecasting Model
-
-Machine learning results dashboard.
-
-Includes:
-
-- model metrics
-- forecast vs actual
-- feature importance
-- sample predictions
-
----
-
-## 6. Benchmarking
-
-DuckDB vs Spark comparison dashboard.
-
-Includes:
-
-- runtime comparisons
-- scalability interpretation
-- distributed vs local tradeoffs
-
----
-
-## 7. Final Takeaways
-
-Portfolio-style conclusions and engineering lessons.
-
----
-
-# Local Development
-
-## Install dependencies
-
-```bash
-npm install
-````
-
-## Start development server
+First, run the development server:
 
 ```bash
 npm run dev
+# or
+yarn dev
+# or
+pnpm dev
+# or
+bun dev
 ```
 
-## Production build
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-```bash
-npm run build
-```
+You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
----
+This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
-# Planned Data Sources
+## Learn More
 
-## Static data
+To learn more about Next.js, take a look at the following resources:
 
-Loaded from:
+- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
+- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
 
-```text
-website/public/data/
-website/public/assets/
-```
+You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
-## Live data
+## Deploy on Vercel
 
-Fetched from:
+The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
-```text
-https://api.weather.gov/
-```
-
-## Optional backend API
-
-Portable ML inference service:
-
-```text
-FastAPI + XGBoost
-```
-
----
-
-# Deployment Targets
-
-## Frontend
-
-* Vercel
-
-## Backend
-
-* Render
-* Railway
-* Fly.io
-
----
-
-# Product Positioning
-
-This website is intended to demonstrate:
-
-* distributed data engineering
-* cloud-based ETL
-* production-style orchestration
-* machine learning deployment
-* analytical storytelling
-* interactive forecasting interfaces
-
-for portfolio and recruiting purposes.
+Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
