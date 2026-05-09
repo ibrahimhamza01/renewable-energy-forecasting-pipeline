@@ -1,4 +1,4 @@
-# Wind Energy Forecasting Pipeline
+# Wind Energy Forecasting Platform
 
 [![Python](https://img.shields.io/badge/Python-3.12-blue)]()
 [![PySpark](https://img.shields.io/badge/PySpark-Distributed-orange)]()
@@ -20,9 +20,9 @@ This project combines:
 - Apache Airflow orchestration
 - cross-engine benchmarking
 - analytical visualization
-- and an upcoming live web platform for real-time wind estimation
+- and an upcoming live web forecasting platform for real-time wind estimation
 
-The system was designed to simulate a realistic end-to-end data + ML platform capable of operating across local development and distributed cloud infrastructure.
+The platform was designed to simulate a realistic end-to-end data + ML system capable of operating across local development, distributed cloud infrastructure, orchestration workflows, and deployable analytics interfaces.
 
 ---
 
@@ -38,6 +38,7 @@ The primary goals of this project are:
 - compare distributed vs single-node execution systems
 - orchestrate workflows using Apache Airflow
 - maintain reproducibility across users and environments
+- generate analytical datasets and visual artifacts
 - package the entire system into a deployable portfolio-grade product
 
 ---
@@ -244,6 +245,7 @@ rather than exhaustive field coverage.
 - Next.js
 - FastAPI
 - XGBoost
+- NOAA Weather API
 - Vercel
 - Render / Railway
 
@@ -252,18 +254,30 @@ rather than exhaustive field coverage.
 # Repository Structure
 
 ```text
-configs/               → runtime + Spark + user configuration
+configs/               → runtime + Spark + website configuration
 data/                  → raw samples + benchmark inputs
 data_contracts/        → schema + mapping definitions
-docs/                  → architecture, experiments, presentation, website plans
+
+docs/
+├── architecture/      → system architecture and cloud execution docs
+├── experiments/       → ETL, Airflow, modeling, and benchmark experiments
+├── presentation/      → presentation and website planning materials
+├── website/           → website product and deployment planning docs
+└── assets/            → exported website-safe figures and images
+
 infra/                 → AWS + Airflow infrastructure
 notebooks/             → validation + EDA + experiments
-outputs/               → generated figures + metrics + artifacts
+outputs/               → generated figures + metrics + local artifacts
 reports/               → final written reports
-scripts/               → runnable orchestration + ETL scripts
+scripts/               → runnable orchestration + ETL + export scripts
 src/                   → core pipeline source code
 tests/                 → validation + unit tests
 website_data/          → exported website-ready datasets
+
+website/
+├── public/            → static website assets + data exports
+├── src/               → Next.js frontend application
+└── tests/             → frontend utility tests
 
 README.md
 FINAL_REPORT.pdf
@@ -409,6 +423,20 @@ Generates:
 
 ---
 
+## Reporting
+
+```text
+src/reporting/
+```
+
+Exports:
+
+- metrics
+- reporting artifacts
+- website-ready summaries
+
+---
+
 # Setup
 
 ## Install Dependencies
@@ -473,6 +501,8 @@ Includes:
 - runtime defaults
 - schemas
 - modeling configs
+- website configs
+- deployment configs
 - project paths
 
 ---
@@ -512,7 +542,8 @@ The project follows a scalable development pattern.
 4. validate distributed outputs
 5. orchestrate via Airflow
 6. export analytical artifacts
-7. package for deployment
+7. preserve portable website datasets
+8. package for deployment
 
 ---
 
@@ -534,6 +565,7 @@ raw NOAA ingestion
 → batch inference
 → forecast validation
 → visualization exports
+→ website-ready artifact generation
 ```
 
 ---
@@ -924,6 +956,53 @@ outputs/benchmark_results/
 
 ---
 
+# Website Artifact Preservation
+
+To ensure the project remains functional even after EC2/S3 expiration, portable frontend-safe artifacts are exported locally.
+
+Current preserved artifacts include:
+
+## Website Data Exports
+
+```text
+website/public/data/
+├── feature_importance.json
+├── forecast_vs_actual.csv
+├── live_station_list.json
+├── model_metrics.json
+├── pipeline_summary.json
+├── regional_trends.csv
+├── seasonal_trends.csv
+└── us_wind_station_map.csv
+```
+
+---
+
+## Website Asset Exports
+
+```text
+website/public/assets/
+├── airflow_dag_graph_success.png
+├── forecast_vs_actual.png
+├── regional_wind_trends.png
+├── seasonal_trends.png
+└── us_wind_potential_map.png
+```
+
+---
+
+## Artifact Validation
+
+Validation scripts ensure:
+
+- all exported images exist
+- CSV schemas are readable
+- JSON files are valid
+- frontend datasets remain lightweight
+- portable artifacts remain deployable
+
+---
+
 # Testing
 
 The repository includes unit and validation tests for:
@@ -972,7 +1051,7 @@ Planned capabilities include:
 
 - FastAPI
 - XGBoost portable inference
-- NOAA API integration
+- NOAA Weather API integration
 
 ---
 
@@ -1014,6 +1093,7 @@ This ensures the platform remains functional even if EC2/S3 infrastructure expir
 
 ```text
 docs/website/
+├── data_export_plan.md
 ├── deployment_plan.md
 ├── live_prediction_design.md
 └── product_spec.md
@@ -1046,6 +1126,7 @@ This project demonstrates:
 - benchmarking methodology
 - reproducible infrastructure
 - analytical visualization
+- website-ready artifact preservation
 - production-style packaging
 - deployable forecasting platform design
 
