@@ -1,162 +1,21 @@
 {
-  "run_timestamp_utc": "2026-05-04T06:21:14.332610+00:00",
-  "training_config": "configs/modeling/training_config.yaml",
-  "model_name": "final_tuned_gbt",
-  "model_type": "spark_ml_gradient_boosted_trees_regressor",
-  "target": {
-    "name": "next_day_daily_region_capacity_factor",
-    "horizon_days": 1
+  "final_model_name": "final_tuned_gbt",
+  "model_family": "Spark MLlib Gradient-Boosted Trees",
+  "target": "next_day_daily_region_capacity_factor",
+  "metrics": {
+    "rmse": 0.045528625785710486,
+    "mae": 0.027492149006163476,
+    "bias": 0.0002142542917999658,
+    "evaluation_rows": 535961
   },
-  "datasets": {
-    "train_table": "s3a://syed-datsbd-s2026/gold/wind/ml/train",
-    "validation_table": "s3a://syed-datsbd-s2026/gold/wind/ml/validation",
-    "test_table": "s3a://syed-datsbd-s2026/gold/wind/ml/test",
-    "final_training_strategy": "train_plus_validation"
+  "coverage": {
+    "start_date": "1995-01-31",
+    "end_date": "2025-08-27",
+    "states": 48
   },
-  "row_counts": {
-    "final_train_rows": 490894,
-    "test_rows": 46507
-  },
-  "feature_count": 46,
-  "feature_columns": [
-    "month",
-    "day_of_year",
-    "day_of_month",
-    "day_of_week",
-    "daily_region_capacity_factor",
-    "mean_region_wind_speed_ms",
-    "avg_station_wind_speed_std_ms",
-    "daily_wind_speed_range_ms",
-    "station_count",
-    "total_hourly_observations",
-    "cf_lag_1d",
-    "cf_lag_2d",
-    "cf_lag_3d",
-    "cf_lag_7d",
-    "cf_rolling_3d_mean",
-    "cf_rolling_3d_std",
-    "cf_rolling_7d_mean",
-    "cf_rolling_7d_std",
-    "state_long_run_avg_cf",
-    "state_long_run_volatility",
-    "year",
-    "daily_region_capacity_factor_lag_1d",
-    "daily_region_capacity_factor_lag_2d",
-    "daily_region_capacity_factor_lag_3d",
-    "daily_region_capacity_factor_lag_7d",
-    "daily_region_capacity_factor_lag_14d",
-    "daily_region_capacity_factor_lag_30d",
-    "daily_region_capacity_factor_lag_1d_minus_lag_7d",
-    "daily_region_capacity_factor_lag_1d_minus_lag_14d",
-    "daily_region_capacity_factor_lag_1d_minus_lag_30d",
-    "daily_region_capacity_factor_rolling_3d_mean",
-    "daily_region_capacity_factor_rolling_3d_min",
-    "daily_region_capacity_factor_rolling_3d_max",
-    "daily_region_capacity_factor_rolling_3d_stddev",
-    "daily_region_capacity_factor_rolling_7d_mean",
-    "daily_region_capacity_factor_rolling_7d_min",
-    "daily_region_capacity_factor_rolling_7d_max",
-    "daily_region_capacity_factor_rolling_7d_stddev",
-    "daily_region_capacity_factor_rolling_14d_mean",
-    "daily_region_capacity_factor_rolling_14d_min",
-    "daily_region_capacity_factor_rolling_14d_max",
-    "daily_region_capacity_factor_rolling_14d_stddev",
-    "daily_region_capacity_factor_rolling_30d_mean",
-    "daily_region_capacity_factor_rolling_30d_min",
-    "daily_region_capacity_factor_rolling_30d_max",
-    "daily_region_capacity_factor_rolling_30d_stddev"
-  ],
-  "hyperparameters": {
-    "max_iter": 80,
-    "max_depth": 5,
-    "step_size": 0.05,
-    "seed": 42
-  },
-  "training_seconds": 199.72561073303223,
-  "test_metrics": {
-    "rmse": 0.04202065582713153,
-    "mae": 0.02566088425200168
-  },
-  "top_20_feature_importance": [
-    {
-      "feature": "daily_region_capacity_factor",
-      "importance": 0.244051098035055
-    },
-    {
-      "feature": "day_of_year",
-      "importance": 0.08439755769400802
-    },
-    {
-      "feature": "avg_station_wind_speed_std_ms",
-      "importance": 0.08230558091715454
-    },
-    {
-      "feature": "daily_region_capacity_factor_rolling_30d_mean",
-      "importance": 0.08191177883109177
-    },
-    {
-      "feature": "state_long_run_volatility",
-      "importance": 0.05708329579980419
-    },
-    {
-      "feature": "state_long_run_avg_cf",
-      "importance": 0.05390466833223048
-    },
-    {
-      "feature": "cf_lag_1d",
-      "importance": 0.04800846657712132
-    },
-    {
-      "feature": "mean_region_wind_speed_ms",
-      "importance": 0.042241345841531754
-    },
-    {
-      "feature": "month",
-      "importance": 0.03786022325761487
-    },
-    {
-      "feature": "year",
-      "importance": 0.037732913890284984
-    },
-    {
-      "feature": "daily_wind_speed_range_ms",
-      "importance": 0.034469452144218427
-    },
-    {
-      "feature": "day_of_month",
-      "importance": 0.01878639230458109
-    },
-    {
-      "feature": "daily_region_capacity_factor_lag_1d_minus_lag_14d",
-      "importance": 0.01787915758219383
-    },
-    {
-      "feature": "daily_region_capacity_factor_lag_1d_minus_lag_30d",
-      "importance": 0.015372675760213596
-    },
-    {
-      "feature": "daily_region_capacity_factor_lag_1d_minus_lag_7d",
-      "importance": 0.013680095469653148
-    },
-    {
-      "feature": "cf_rolling_3d_std",
-      "importance": 0.013428208331920845
-    },
-    {
-      "feature": "daily_region_capacity_factor_rolling_3d_stddev",
-      "importance": 0.01112849849901657
-    },
-    {
-      "feature": "total_hourly_observations",
-      "importance": 0.008885473538879377
-    },
-    {
-      "feature": "station_count",
-      "importance": 0.00866280000566205
-    },
-    {
-      "feature": "daily_region_capacity_factor_rolling_30d_stddev",
-      "importance": 0.007828780553205138
-    }
-  ]
+  "source": {
+    "forecast_outputs": "s3a://syed-datsbd-s2026/forecasts/outputs/run_id=20260504T090915Z/model_version=final_tuned_gbt_20260504T063157Z",
+    "ml_base_actuals": "s3a://syed-datsbd-s2026/gold/wind/ml/base",
+    "model_registry": "s3a://syed-datsbd-s2026/models/registry/final_gbt/stages/"
+  }
 }

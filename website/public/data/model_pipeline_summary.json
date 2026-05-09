@@ -1,0 +1,16 @@
+{
+  "model_registry_path": "s3a://syed-datsbd-s2026/models/registry/final_gbt",
+  "total_stages": 2,
+  "stages": [
+    {
+      "index": 0,
+      "class": "VectorAssembler",
+      "uid": "VectorAssembler_4ef3955f1ecb"
+    },
+    {
+      "index": 1,
+      "class": "GBTRegressionModel",
+      "uid": "GBTRegressor_be4456bce6a9"
+    }
+  ]
+}
