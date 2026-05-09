@@ -1,0 +1,34 @@
+[
+  {
+    "station_id": "KSFO",
+    "name": "San Francisco International Airport",
+    "city": "San Francisco",
+    "state": "CA",
+    "latitude": 37.6213,
+    "longitude": -122.379
+  },
+  {
+    "station_id": "KIAH",
+    "name": "George Bush Intercontinental Airport",
+    "city": "Houston",
+    "state": "TX",
+    "latitude": 29.9902,
+    "longitude": -95.3368
+  },
+  {
+    "station_id": "KMSP",
+    "name": "Minneapolis-Saint Paul International Airport",
+    "city": "Minneapolis",
+    "state": "MN",
+    "latitude": 44.8848,
+    "longitude": -93.2223
+  },
+  {
+    "station_id": "KMIA",
+    "name": "Miami International Airport",
+    "city": "Miami",
+    "state": "FL",
+    "latitude": 25.7959,
+    "longitude": -80.287
+  }
+]

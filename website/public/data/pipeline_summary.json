@@ -1,0 +1,14 @@
+{
+  "project_name": "Live Wind Forecasting Platform",
+  "mode": "static_artifacts_plus_live_noaa",
+  "dataset": "NOAA Integrated Surface Database (ISD)",
+  "raw_scale": "600GB+ uncompressed",
+  "global_station_count": "35,000+",
+  "geographic_scope": "Contiguous United States",
+  "time_window": "1995-2025",
+  "processing_engine": "PySpark",
+  "orchestration": "Apache Airflow",
+  "benchmarking": "DuckDB vs Spark",
+  "final_model": "final_tuned_gbt",
+  "deployment_goal": "Website works without EC2/S3 after artifact export"
+}

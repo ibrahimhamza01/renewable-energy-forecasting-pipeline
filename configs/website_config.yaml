@@ -1,0 +1,118 @@
+website:
+  name: Live Wind Forecasting Platform
+  mode: static_artifacts_plus_live_noaa
+
+  artifact_roots:
+    source_figures_dir: outputs/figures
+    source_metrics_dir: outputs/metrics
+    source_benchmark_dir: outputs/benchmark_results
+    source_website_data_dir: website_data
+
+    docs_assets_dir: docs/assets
+    website_assets_dir: website/public/assets
+    website_data_dir: website/public/data
+
+  required_assets:
+    - source: outputs/figures/forecast_vs_actual.png
+      output_name: forecast_vs_actual.png
+      description: Forecast vs actual model validation plot
+
+    - source: outputs/figures/regional_wind_trends.png
+      output_name: regional_wind_trends.png
+      description: Regional wind capacity factor trend plot
+
+    - source: outputs/figures/seasonal_trends.png
+      output_name: seasonal_trends.png
+      description: Seasonal wind capacity factor plot
+
+    - source: outputs/figures/us_wind_potential_map.png
+      output_name: us_wind_potential_map.png
+      description: Station-level U.S. wind potential map
+
+    - source: outputs/figures/benchmark_comparison.png
+      output_name: benchmark_comparison.png
+      description: DuckDB vs Spark benchmark comparison plot
+      optional: true
+
+    - source: docs/experiments/airflow/airflow_dag_graph_success.png
+      output_name: airflow_dag_graph_success.png
+      description: Airflow DAG graph screenshot
+
+  candidate_data_artifacts:
+    - source: website_data/actuals/forecast_vs_actual.csv
+      output_name: forecast_vs_actual.csv
+      required_columns:
+        - date
+        - region
+        - actual
+        - predicted
+      description: Forecast vs actual validation data
+
+    - source: website_data/trends/regional_trends.csv
+      output_name: regional_trends.csv
+      required_columns:
+        - date
+        - region
+        - capacity_factor
+      description: Regional trend data
+
+    - source: website_data/trends/seasonal_trends.csv
+      output_name: seasonal_trends.csv
+      required_columns:
+        - region
+        - season
+        - capacity_factor
+      description: Seasonal trend data
+
+    - source: website_data/maps/us_wind_station_map.csv
+      output_name: us_wind_station_map.csv
+      required_columns:
+        - station_id
+        - latitude
+        - longitude
+        - state
+        - avg_wind_speed_ms
+      description: Station-level wind map data
+
+  metrics_artifacts:
+    - source: outputs/metrics/final_gbt_test_metrics.json
+      output_name: model_metrics.json
+      optional: false
+      description: Final GBT model test metrics
+
+    - source: outputs/metrics/final_gbt_feature_importance.json
+      output_name: feature_importance.json
+      optional: false
+      description: Final GBT feature importance
+
+  live_stations:
+    description: Starter NOAA/NWS stations used by the live wind explorer.
+    source_policy: Config-driven starter list; can be expanded later from station metadata.
+    stations:
+      - station_id: KSFO
+        name: San Francisco International Airport
+        city: San Francisco
+        state: CA
+        latitude: 37.6213
+        longitude: -122.3790
+
+      - station_id: KIAH
+        name: George Bush Intercontinental Airport
+        city: Houston
+        state: TX
+        latitude: 29.9902
+        longitude: -95.3368
+
+      - station_id: KMSP
+        name: Minneapolis-Saint Paul International Airport
+        city: Minneapolis
+        state: MN
+        latitude: 44.8848
+        longitude: -93.2223
+
+      - station_id: KMIA
+        name: Miami International Airport
+        city: Miami
+        state: FL
+        latitude: 25.7959
+        longitude: -80.2870
