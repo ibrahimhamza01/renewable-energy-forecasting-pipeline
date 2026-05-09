@@ -5,275 +5,598 @@
 [![AWS](https://img.shields.io/badge/AWS-S3%20%7C%20EC2-yellow)]()
 [![Airflow](https://img.shields.io/badge/Airflow-Orchestration-red)]()
 [![DuckDB](https://img.shields.io/badge/DuckDB-Benchmarking-lightgrey)]()
-[![Status](https://img.shields.io/badge/Status-Complete-success)]()
+[![Next.js](https://img.shields.io/badge/Next.js-Website-black)]()
+[![FastAPI](https://img.shields.io/badge/FastAPI-Live%20Inference-green)]()
+[![Status](https://img.shields.io/badge/Status-Active-success)]()
 
-A scalable, end-to-end wind energy forecasting pipeline built on NOAA Integrated Surface Database (ISD) data.
-Designed for large-scale data processing using PySpark, with config-driven cloud execution and reproducibility across local and distributed environments.
+A production-style renewable energy forecasting platform built on NOAA Integrated Surface Database (ISD) data.
+
+This project combines:
+
+- large-scale distributed data engineering
+- Spark-based ETL pipelines
+- physics-informed wind energy modeling
+- machine learning forecasting
+- Apache Airflow orchestration
+- cross-engine benchmarking
+- analytical visualization
+- and an upcoming live web platform for real-time wind estimation
+
+The system was designed to simulate a realistic end-to-end data + ML platform capable of operating across local development and distributed cloud infrastructure.
 
 ---
 
-## Project Goals
+# Project Objectives
 
-* Build a fully end-to-end distributed data pipeline for wind energy forecasting
-* Process NOAA ISD hourly meteorological data (~600GB) at scale using Spark
-* Convert raw weather observations into wind energy potential estimates
-* Develop machine learning models for short-term wind forecasting (24–72 hours)
-* Benchmark distributed vs single-node systems (Spark vs DuckDB)
-* Ensure reproducibility across different users’ cloud environments (S3 + EC2)
-* Orchestrate the entire pipeline using Apache Airflow (production-style scheduling layer)
+The primary goals of this project are:
+
+- build a scalable distributed forecasting pipeline using PySpark
+- process NOAA ISD weather observations (~600GB+) efficiently
+- convert raw meteorological observations into wind energy potential estimates
+- engineer ML-ready forecasting datasets
+- train and evaluate forecasting models for short-term wind prediction
+- compare distributed vs single-node execution systems
+- orchestrate workflows using Apache Airflow
+- maintain reproducibility across users and environments
+- package the entire system into a deployable portfolio-grade product
 
 ---
 
-## Architecture
+# High-Level Architecture
 
 ```mermaid
 flowchart LR
 
-A["NOAA ISD Data<br/>S3"] --> B["Bronze Layer<br/>Raw Ingestion"]
-B --> C["Silver Layer<br/>Parsing, Cleaning, QC"]
-C --> D["Gold Layer<br/>Analytics Tables"]
+A["NOAA ISD Data<br/>AWS Open Data"] --> B["Bronze Layer<br/>Raw Ingestion"]
+B --> C["Silver Layer<br/>Parsing + Cleaning + QC"]
+C --> D["Gold Layer<br/>Analytics + ML Tables"]
+
 D --> E["Feature Engineering"]
 E --> F["ML Training"]
 F --> G["Model Registry"]
-G --> H["Batch Inference"]
+G --> H["Batch Forecasting"]
 H --> I["Forecast Outputs"]
 
 D --> J["Visualization Datasets"]
-J --> K["Dashboards and Plots"]
+J --> K["Plots + Maps + Reporting"]
 
-E --> L["DuckDB Benchmark"]
-E --> M["Spark Benchmark"]
+E --> L["DuckDB Benchmarks"]
+E --> M["Spark Benchmarks"]
 
-N["Airflow DAG"] --> B
+N["Apache Airflow"] --> B
 N --> C
 N --> D
 N --> E
 N --> F
 N --> H
-````
-
----
-
-## Dataset: NOAA Integrated Surface Database (ISD)
-
-* Source: NOAA ISD (AWS Open Data)
-* Format: CSV (wide schema with encoded fields)
-* Scale: 600GB+ uncompressed
-
-### Coverage
-
-* Global stations (~35,000)
-* Hourly observations
-* Years: 1901–2025
-
----
-
-## Project Scope
-
-### Geographic scope
-
-* Contiguous United States
-
-### Large-scale project window
-
-* 1995–2025
-
-### Local development subset
-
-* states: CA, TX, MN, FL
-* years: 2018–2020
-* target size: ~150 stations
-
----
-
-## Core Fields in Scope
-
-* WND → wind speed & direction (primary target field)
-* TMP → temperature
-* DEW → dew point
-* VIS → visibility
-* CIG → ceiling
-* SLP → pressure
-* DATE → true timestamp (used for all time logic)
-
----
-
-## Important Notes
-
-* S3 file timestamps are not data timestamps
-* Always use the DATE column for time-based analysis
-* Many weather fields are encoded strings and require parsing
-* The dataset is wide and sparse, so optional fields are excluded from v1
-* Wind is the primary modeling target
-* Auxiliary weather fields are secondary
-* Solar is out of scope
-
----
-
-## Tech Stack
-
-* Python (uv-managed environment)
-* PySpark (distributed processing)
-* DuckDB (single-node benchmarking)
-* Pandas / NumPy
-* PyArrow
-* AWS (S3, EC2)
-* Apache Airflow (orchestration layer)
-* Datashader / Plotly
-
----
-
-## Repository Structure
-
-```
-src/             → core pipeline code
-configs/         → shared + user-specific configs
-configs/users/   → per-user AWS + local settings
-data_contracts/  → schema + data definitions
-infra/           → EC2, S3, Airflow setup
-notebooks/       → validation + experiments
-scripts/         → runnable entrypoints
-tests/           → unit tests
-docs/            → architecture, experiments, presentation materials
-outputs/         → generated artifacts (gitignored)
 ```
 
 ---
 
-## Setup (uv workflow)
+# Dataset: NOAA Integrated Surface Database (ISD)
 
-### Install dependencies
+Source:
 
+- NOAA ISD (AWS Open Data)
+
+Characteristics:
+
+- hourly global weather observations
+- ~35,000 stations
+- years: 1901–2025
+- encoded wide-schema CSV format
+- 600GB+ uncompressed scale
+
+---
+
+# Project Scope
+
+## Geographic Scope
+
+Contiguous United States.
+
+---
+
+## Full Pipeline Window
+
+1995–2025
+
+---
+
+## Local Development Scope
+
+Development subset used for rapid iteration:
+
+- California
+- Texas
+- Minnesota
+- Florida
+
+Years:
+
+- 2018–2020
+
+Approximate station scope:
+
+- ~150 stations
+
+---
+
+# Core Weather Fields
+
+The pipeline focuses on NOAA ISD weather fields relevant to wind forecasting.
+
+| Field | Purpose |
+|---|---|
+| WND | wind speed + direction |
+| TMP | temperature |
+| DEW | dew point |
+| VIS | visibility |
+| CIG | ceiling |
+| SLP | sea-level pressure |
+| DATE | true observation timestamp |
+
+---
+
+# Important Engineering Constraints
+
+Several important NOAA ISD characteristics influenced the pipeline design.
+
+## Timestamp Handling
+
+S3 object timestamps are not valid analytical timestamps.
+
+All time logic uses:
+
+```text
+DATE
 ```
+
+from the NOAA observations.
+
+---
+
+## Encoded Weather Fields
+
+Many NOAA fields are encoded string payloads that require custom parsing logic.
+
+The project includes dedicated parsers for:
+
+- WND
+- TMP
+- DEW
+- VIS
+- CIG
+- SLP
+
+---
+
+## Sparse Wide Dataset
+
+The ISD dataset is extremely wide and sparse.
+
+Version 1 intentionally focuses on:
+
+- wind forecasting
+- essential weather features
+- scalable processing
+
+rather than exhaustive field coverage.
+
+---
+
+# Technology Stack
+
+## Distributed Processing
+
+- PySpark
+- Spark SQL
+- Parquet
+
+---
+
+## Data Science
+
+- Pandas
+- NumPy
+- PyArrow
+
+---
+
+## Machine Learning
+
+- Spark MLlib
+- Gradient Boosted Trees
+- Random Forest
+- Linear Regression
+
+---
+
+## Cloud Infrastructure
+
+- AWS S3
+- AWS EC2
+
+---
+
+## Workflow Orchestration
+
+- Apache Airflow
+
+---
+
+## Benchmarking
+
+- DuckDB
+- Spark
+
+---
+
+## Visualization
+
+- Plotly
+- Datashader
+
+---
+
+## Upcoming Web Platform
+
+- Next.js
+- FastAPI
+- XGBoost
+- Vercel
+- Render / Railway
+
+---
+
+# Repository Structure
+
+```text
+configs/               → runtime + Spark + user configuration
+data/                  → raw samples + benchmark inputs
+data_contracts/        → schema + mapping definitions
+docs/                  → architecture, experiments, presentation, website plans
+infra/                 → AWS + Airflow infrastructure
+notebooks/             → validation + EDA + experiments
+outputs/               → generated figures + metrics + artifacts
+reports/               → final written reports
+scripts/               → runnable orchestration + ETL scripts
+src/                   → core pipeline source code
+tests/                 → validation + unit tests
+website_data/          → exported website-ready datasets
+
+README.md
+FINAL_REPORT.pdf
+docker-compose.yml
+pyproject.toml
+uv.lock
+```
+
+---
+
+# Source Code Organization
+
+## Ingestion
+
+```text
+src/ingestion/
+```
+
+Handles:
+
+- NOAA file discovery
+- station filtering
+- metadata loading
+- raw ingestion
+
+---
+
+## Parsing
+
+```text
+src/parsing/
+```
+
+Contains dedicated parsers for NOAA encoded weather fields.
+
+---
+
+## Cleaning
+
+```text
+src/cleaning/
+```
+
+Handles:
+
+- QC filtering
+- null normalization
+- sentinel value handling
+- metadata enrichment
+- unit standardization
+
+---
+
+## Storage
+
+```text
+src/storage/
+```
+
+Responsible for:
+
+- bronze writes
+- silver writes
+- gold table generation
+- repartitioning
+- compaction
+
+---
+
+## Feature Engineering
+
+```text
+src/features/
+```
+
+Builds:
+
+- lag features
+- rolling statistics
+- temporal features
+- regional features
+
+---
+
+## Physics Modeling
+
+```text
+src/physics/
+```
+
+Implements:
+
+- turbine-inspired power curves
+- wind indices
+- capacity factor logic
+
+using Spark-native expressions.
+
+---
+
+## Machine Learning
+
+```text
+src/ml/
+```
+
+Contains:
+
+- training pipelines
+- tuning workflows
+- dataset splitting
+- inference logic
+- model registry utilities
+
+---
+
+## Benchmarking
+
+```text
+src/benchmarking/
+```
+
+Implements:
+
+- Spark benchmarks
+- DuckDB benchmarks
+- benchmark reporting
+
+---
+
+## Visualization
+
+```text
+src/visualization/
+```
+
+Generates:
+
+- wind maps
+- trend charts
+- forecast validation plots
+- seasonal visualizations
+
+---
+
+# Setup
+
+## Install Dependencies
+
+```bash
 uv sync
 ```
 
-### Activate environment
+---
 
-```
+## Activate Environment
+
+```bash
 source .venv/bin/activate
 ```
 
-### Verify
+---
 
-```
+## Verify Environment
+
+```bash
 which python
 ```
 
 ---
 
-## Configuration System
+# Configuration System
 
-This project is fully config-driven to support multiple users and environments.
+The pipeline is fully config-driven to support:
 
-Never hardcode:
-
-* S3 bucket names
-* EC2 hostnames
-* Spark master URLs
-* Local directories
-* Output paths
+- multiple users
+- different AWS environments
+- local execution
+- distributed execution
+- reproducibility
 
 ---
 
-### Configuration layers
+## Never Hardcode
 
-#### Shared config (configs/)
+The project intentionally avoids hardcoding:
 
-Defines:
-
-* dataset paths
-* Spark settings
-* project defaults
-
-Examples:
-
-* configs/paths.yaml
-* configs/spark_config.yaml
+- S3 buckets
+- EC2 hostnames
+- Spark URLs
+- runtime paths
+- output directories
 
 ---
 
-#### User config (configs/users/<name>.yaml)
+## Shared Configs
 
-Defines:
+Located in:
 
-* AWS project bucket
-* EC2 host + SSH access
-* Spark master URL
-* local runtime paths
-
----
-
-#### Active config
-
+```text
+configs/
 ```
+
+Includes:
+
+- Spark settings
+- runtime defaults
+- schemas
+- modeling configs
+- project paths
+
+---
+
+## User Configs
+
+Located in:
+
+```text
+configs/users/
+```
+
+Defines:
+
+- AWS resources
+- EC2 access
+- runtime locations
+- Spark master URLs
+
+---
+
+## Active Runtime Config
+
+```bash
 export PROJECT_USER_CONFIG=configs/users/syed.yaml
 ```
 
 ---
 
-## Development Workflow
+# Development Workflow
 
-1. Build locally on a small sample
-2. Validate with notebooks and tests
-3. Scale to Spark (EC2 + S3)
-4. Re-validate outputs
-5. Orchestrate using Airflow DAGs
+The project follows a scalable development pattern.
+
+1. build locally on small samples
+2. validate with notebooks + tests
+3. scale to Spark cluster execution
+4. validate distributed outputs
+5. orchestrate via Airflow
+6. export analytical artifacts
+7. package for deployment
 
 ---
 
-## Pipeline Summary
+# End-to-End Pipeline Flow
 
-```
-raw NOAA data
+```text
+raw NOAA ingestion
 → parsing
 → cleaning
 → enrichment
+→ standardization
 → aggregation
 → analytics
 → feature engineering
-→ ML-ready data
+→ ML-ready datasets
 → model training
+→ model evaluation
 → model registry
 → batch inference
-→ forecast outputs
-→ validation
+→ forecast validation
+→ visualization exports
 ```
 
 ---
 
-# Data Processing and Outputs
+# Data Processing
 
-## Raw Data Understanding
+## Raw NOAA Structure
 
-* Data organized as year/station.csv
-* Each file = station-year
-* Each row = timestamped observation
+NOAA ISD data organization:
+
+```text
+year/station.csv
+```
+
+Each file represents:
+
+- a station-year
+
+Each row represents:
+
+- a timestamped weather observation
 
 ---
 
-## Cleaning and Parsing
+# Cleaning and Quality Control
 
-* Encoded fields parsed into numeric values
-* Sentinel values (9999, +9999, etc.) → NULL
-* Quality control filters applied
-* Units standardized (m/s, °C, hPa)
-* Station metadata joined for geographic context
+The cleaning stage performs:
+
+- sentinel value replacement
+- malformed record handling
+- numeric parsing
+- metadata joins
+- quality filtering
+- unit normalization
+
+Examples:
+
+```text
+9999
++9999
+```
+
+converted into:
+
+```text
+NULL
+```
 
 ---
 
-# Data Lake Structure
+# Data Lake Architecture
 
 ## Bronze Layer
 
-* Raw ingestion from NOAA S3
-* Normalized ingestion schema
-* Handles missing files
-* Small-file problem mitigated
+Purpose:
+
+- raw NOAA ingestion
+- normalized ingestion schema
+- resilient distributed loading
 
 Output:
 
-```
+```text
 s3a://<user-bucket>/bronze/isd
 ```
 
@@ -281,21 +604,34 @@ s3a://<user-bucket>/bronze/isd
 
 ## Silver Layer
 
-* Parsed weather fields
-* QC filtering
-* Unit standardization
-* Metadata enrichment
+Purpose:
+
+- parsed weather fields
+- quality-controlled records
+- standardized units
+- metadata enrichment
 
 Partitioning:
 
-* year
-* state
+- year
+- state
 
 Output:
 
-```
+```text
 s3a://<user-bucket>/silver/weather
 ```
+
+---
+
+## Gold Layer
+
+Purpose:
+
+- analytical datasets
+- ML-ready datasets
+- forecasting aggregates
+- benchmark-ready tables
 
 ---
 
@@ -303,272 +639,268 @@ s3a://<user-bucket>/silver/weather
 
 ## Wind Potential Definition
 
-Wind potential is measured using capacity factor:
+Wind potential is represented using:
 
-* normalized wind energy output between 0 and 1
+```text
+capacity factor
+```
+
+normalized between:
+
+```text
+0 and 1
+```
 
 ---
 
-## Wind Physics Modeling
+## Physics-Based Modeling
 
-* Turbine-inspired power curve
-* Cut-in, rated, cut-out speeds
-* Wind power density calculation
-* Spark-native implementation (no Python UDFs)
+The project includes turbine-inspired wind logic:
+
+- cut-in speeds
+- rated speeds
+- cut-out speeds
+- wind power density estimation
+
+All implemented using Spark-native transformations.
+
+No Python UDFs are used in production ETL logic.
 
 ---
 
-# Final Analytical Tables (Gold Layer)
+# Gold Analytical Outputs
 
 ## Daily Regional Wind Table
 
-```
+```text
 s3a://<user-bucket>/gold/wind/analytics/daily_region
 ```
 
+---
+
 ## Monthly State Wind Table
 
-```
+```text
 s3a://<user-bucket>/gold/wind/analytics/monthly_state
 ```
 
+---
+
 ## Extreme Event Table
 
-```
+```text
 s3a://<user-bucket>/gold/wind/analytics/extreme_events
 ```
 
 ---
 
-# Machine Learning Tables
+# Machine Learning Pipeline
 
 ## ML Base Table
 
-```
+```text
 s3a://<user-bucket>/gold/wind/ml/base
 ```
 
 ---
 
-## Feature Table
+## Feature Engineering
 
-Includes:
+Feature generation includes:
 
-* Lag features
-* Rolling statistics
-* Temporal features
-* Weather aggregates
-
----
-
-## Training Tables
-
-Time-based splits:
-
-* Train ≤ 2019
-* Validation 2020–2022
-* Test ≥ 2023
+- lag features
+- rolling statistics
+- temporal features
+- weather aggregates
+- regional features
 
 ---
 
-# Model Training and Selection
+## Dataset Splits
 
-## Models
+Time-based splitting strategy:
 
-* Baseline
-* Linear Regression
-* Random Forest
-* Gradient Boosted Trees (GBT)
+| Split | Years |
+|---|---|
+| Train | ≤ 2019 |
+| Validation | 2020–2022 |
+| Test | ≥ 2023 |
 
 ---
 
-## Best Model
+# Forecasting Models
 
-```
+Models evaluated:
+
+- Baseline
+- Linear Regression
+- Random Forest
+- Gradient Boosted Trees (GBT)
+
+---
+
+# Final Selected Model
+
+```text
 final_tuned_gbt
 ```
 
 ---
 
-## Performance
+# Forecasting Performance
 
-* RMSE ≈ 0.042
-* MAE ≈ 0.025
+| Metric | Value |
+|---|---|
+| RMSE | ~0.042 |
+| MAE | ~0.025 |
+
+---
+
+## Forecast vs Actual
 
 ![Forecast vs Actual](./outputs/figures/forecast_vs_actual.png)
 
 ---
 
-## Model Registry
+# Model Registry
 
-```
+```text
 s3a://<user-bucket>/models/registry/
 ```
 
 ---
 
-# Batch Inference and Forecast Outputs
+# Batch Inference Outputs
 
-## Output Location
+Forecast outputs stored in:
 
-```
+```text
 s3a://<user-bucket>/forecasts/outputs/
 ```
 
 ---
 
-## Forecast Performance
+# Forecast Validation Metrics
 
-* MAE ≈ 0.0275
-* RMSE ≈ 0.0455
-* Bias ≈ ~0
+| Metric | Value |
+|---|---|
+| MAE | ~0.0275 |
+| RMSE | ~0.0455 |
+| Bias | ~0 |
 
 ---
 
 # Apache Airflow Orchestration
 
-## Overview
+The project includes a production-style orchestration layer using Apache Airflow.
 
-The pipeline is orchestrated using Apache Airflow to simulate a production-grade workflow.
+Main DAG:
 
----
-
-## DAG: `wind_pipeline_dag`
-
-### Tasks
-
-1. check_config
-2. write_bronze
-3. write_silver
-4. build_gold_wind_tables
-5. build_feature_table
-6. train_model
-7. evaluate_model
-8. update_model_registry
-9. generate_forecasts
-10. validate_forecasts
+```text
+wind_pipeline_dag
+```
 
 ---
 
-## Execution Modes
+## DAG Responsibilities
+
+- config validation
+- bronze ingestion
+- silver generation
+- gold table generation
+- feature table generation
+- model training
+- evaluation
+- model registration
+- forecast generation
+- validation
+
+---
+
+## Airflow Execution Modes
 
 ### Dry Run Mode
 
 Used for:
 
-* Demonstration
-* DAG validation
-* Avoiding heavy compute
-
-Example:
-
-```
-echo "[DRY RUN] Skipping bronze layer"
-```
+- demonstrations
+- DAG validation
+- safe orchestration testing
 
 ---
 
-### Full Run Mode
+### Full Execution Mode
 
-Executes full pipeline:
+Runs actual distributed workloads.
 
-```
+Example:
+
+```bash
 bash scripts/run_bronze_full_us.sh
 ```
 
 ---
 
-## Observability
+# Airflow Observability
 
-Airflow UI provides:
+The Airflow environment supports:
 
-* Graph View (task dependencies)
-* Gantt View (execution timeline)
-* Logs (debugging + traceability)
+- Graph View
+- Gantt View
+- task logs
+- dependency tracing
+- execution monitoring
 
 ---
 
-## Key Learnings
+## Airflow DAG Graph
 
-* Airflow tasks run in isolated environments
-* Logging is critical for debugging
-* DAGs must support safe dry runs
-* Orchestration must remain separate from pipeline logic
-* Config-driven design enables multi-user portability
+![Airflow DAG](./docs/experiments/airflow/airflow_dag_graph_success.png)
 
 ---
 
 # Benchmarking: DuckDB vs Spark
 
-## Overview
+The project benchmarks:
 
-Evaluates tradeoffs between single-node and distributed processing.
+- single-node analytical execution
+vs
+- distributed Spark execution
 
----
-
-## Benchmark Tasks
-
-* Filtering by year and region
-* Daily aggregation
-* Grouped summaries
-* Optional joins
+using equivalent workloads.
 
 ---
 
-## Implementation
+# Benchmark Tasks
 
-### DuckDB
+Included benchmark operations:
 
-* Local execution
-* Low overhead
-* Fast iteration
-
-### Spark
-
-* Distributed execution
-* Higher overhead
-* Scales to large datasets
+- filtering
+- aggregations
+- grouped summaries
+- metadata joins
 
 ---
 
-## Execution
+# Benchmark Results
 
-```
-./scripts/run_benchmarks.sh
-```
+Key findings:
+
+- DuckDB performs exceptionally well on smaller local workloads
+- Spark incurs scheduling overhead
+- Spark becomes necessary at larger distributed scales
+- warm Spark runs improve performance
 
 ---
 
-## Outputs
+# Benchmark Outputs
 
-```
+```text
 outputs/benchmark_results/
 ├── duckdb_benchmarks.csv
 ├── spark_benchmarks.csv
 ├── benchmark_comparison.csv
 ```
-
----
-
-## Key Results
-
-* DuckDB faster on small datasets
-* Spark slower due to startup cost
-* Spark required for large-scale processing
-
----
-
-## Interpretation
-
-DuckDB:
-
-* local analytics
-* rapid experimentation
-
-Spark:
-
-* large-scale pipelines
-* production workloads
 
 ---
 
@@ -578,57 +910,155 @@ Spark:
 
 ![U.S. Wind Potential Map](./outputs/figures/us_wind_potential_map.png)
 
-## Regional Wind Potential Trends
+---
 
-![Regional Wind Potential Trends](./outputs/figures/regional_wind_trends.png)
+## Regional Wind Trends
 
-## Seasonal Wind Potential
-
-![Seasonal Wind Potential](./outputs/figures/seasonal_trends.png)
+![Regional Wind Trends](./outputs/figures/regional_wind_trends.png)
 
 ---
 
-# Key Rules
+## Seasonal Wind Trends
 
-* All paths must come from config
-* Code must be environment-agnostic
-* Never hardcode infrastructure
-* Always use true timestamps
-* Validate before scaling
-* Separate orchestration from logic
+![Seasonal Wind Trends](./outputs/figures/seasonal_trends.png)
 
 ---
 
-# Final Note
+# Testing
 
-This project implements a production-grade pipeline combining:
+The repository includes unit and validation tests for:
 
-* Distributed data engineering
-* Machine learning workflows
-* Airflow orchestration
-* Cross-engine benchmarking
+- parsers
+- unit conversions
+- feature generation
+- model IO
+- quality filters
+- power curve logic
+
+Test suite location:
+
+```text
+tests/
+```
 
 ---
 
-# Output Capability
+# Current Website Platform Work
 
-The pipeline produces:
+The project is currently being extended into a live portfolio-grade forecasting platform.
 
-* Scalable wind energy datasets
-* ML-ready features
-* Trained models
-* Model registry artifacts
-* Forecast outputs
-* Benchmark comparisons
-* Orchestrated execution workflows
+Planned capabilities include:
+
+- live NOAA-powered wind estimation
+- interactive forecasting dashboards
+- pipeline storytelling
+- benchmark visualizations
+- deployable ML inference
+- public cloud deployment
+
+---
+
+# Planned Website Stack
+
+## Frontend
+
+- Next.js
+- TypeScript
+- Plotly / Chart.js
+
+---
+
+## Backend
+
+- FastAPI
+- XGBoost portable inference
+- NOAA API integration
+
+---
+
+## Deployment
+
+- Vercel
+- Render / Railway
+
+---
+
+# Website Product Direction
+
+The upcoming website separates:
+
+## Historical Pipeline Results
+
+Precomputed artifacts exported from Spark:
+
+- trends
+- forecasts
+- metrics
+- benchmark outputs
+- visualizations
+
+from
+
+## Live Wind Estimation
+
+Real-time NOAA weather observations combined with:
+
+- turbine-inspired power curve logic
+- optional deployable ML inference
+
+This ensures the platform remains functional even if EC2/S3 infrastructure expires.
+
+---
+
+# Current Website Planning Docs
+
+```text
+docs/website/
+├── deployment_plan.md
+├── live_prediction_design.md
+└── product_spec.md
+```
+
+---
+
+# Engineering Principles
+
+Core project rules:
+
+- all paths must come from config
+- infrastructure must remain environment-agnostic
+- timestamps must use true NOAA observation times
+- orchestration must remain separate from business logic
+- validation occurs before scaling
+- portable artifacts should outlive cloud infrastructure
+
+---
+
+# Final Outcome
+
+This project demonstrates:
+
+- distributed data engineering
+- scalable ETL architecture
+- Spark-based processing
+- ML forecasting systems
+- Airflow orchestration
+- benchmarking methodology
+- reproducible infrastructure
+- analytical visualization
+- production-style packaging
+- deployable forecasting platform design
 
 ---
 
 # Ready For
 
-* Forecasting systems
-* Batch inference pipelines
-* Airflow orchestration
-* Visualization dashboards
-* Real-world energy analytics
-* Production deployment
+- forecasting systems
+- renewable energy analytics
+- distributed ETL pipelines
+- Airflow orchestration
+- ML engineering workflows
+- analytical dashboards
+- live forecasting interfaces
+- production deployment
+- technical portfolio demonstrations
