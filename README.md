@@ -22,6 +22,9 @@ This project combines:
 - cross-engine benchmarking
 - analytical visualization
 - static website artifact preservation
+- historical pipeline dashboards
+- interactive forecasting model diagnostics
+- DuckDB vs Spark benchmark dashboards
 - live NOAA-powered wind estimation
 - and a portfolio-grade web platform for demonstrating both historical analytics and live wind potential
 
@@ -43,6 +46,9 @@ The primary goals of this project are:
 - maintain reproducibility across users and environments
 - generate analytical datasets and visual artifacts
 - preserve final outputs so the project survives without EC2/S3
+- build interactive historical dashboards from exported Spark artifacts
+- build forecasting model evaluation dashboards from preserved model outputs
+- build benchmarking dashboards from DuckDB and Spark runtime comparisons
 - build a live web interface using current NOAA/NWS observations
 - package the entire system into a deployable portfolio-grade product
 
@@ -69,8 +75,14 @@ J --> K["Plots + Maps + Reporting"]
 D --> W1["Website Artifact Exports"]
 W1 --> W2["Static Website Data<br/>CSV + JSON + Images"]
 
+W2 --> W3["Historical Results Dashboard<br/>/results"]
+W2 --> W4["Forecasting Dashboard<br/>/forecasting"]
+W2 --> W5["Benchmarking Dashboard<br/>/benchmarking"]
+
 E --> L["DuckDB Benchmarks"]
 E --> M["Spark Benchmarks"]
+L --> W5
+M --> W5
 
 N["Apache Airflow"] --> B
 N --> C
@@ -79,10 +91,10 @@ N --> E
 N --> F
 N --> H
 
-P["NOAA/NWS Live API"] --> Q["Live Wind Explorer"]
+P["NOAA/NWS Live API"] --> Q["Live Wind Explorer<br/>/live"]
 W2 --> Q
 Q --> R["Live Capacity Factor Estimate"]
-````
+```
 
 ---
 
@@ -121,6 +133,18 @@ The processed pipeline station universe currently covers:
 ## Full Pipeline Window
 
 1995–2025
+
+The full historical analytical window is preserved in website-safe artifacts and used by the interactive historical dashboard.
+
+Current full-window website exports include:
+
+* 537,449 daily regional/state wind rows
+* 5,904 seasonal trend rows
+* 17,664 monthly state trend rows
+* 1,488 yearly state summary rows
+* 48 state-level long-run summaries
+* 19,430,672 station-day records summarized into station-level exports
+* 535,961 forecast-vs-actual evaluation rows
 
 ---
 
@@ -264,6 +288,7 @@ rather than exhaustive coverage of every NOAA field.
 * Datashader
 * Matplotlib
 * exported static figures
+* Recharts dashboards in the Next.js frontend
 
 ---
 
@@ -275,6 +300,9 @@ rather than exhaustive coverage of every NOAA field.
 * NOAA/NWS Weather API
 * static CSV/JSON artifacts
 * live browser-side wind estimation
+* interactive historical pipeline dashboard
+* interactive forecasting model dashboard
+* interactive DuckDB vs Spark benchmarking dashboard
 
 ---
 
@@ -317,7 +345,7 @@ website/
 ├── src/
 │   ├── app/           → Next.js app routes
 │   ├── components/    → reusable UI components
-│   ├── lib/           → NOAA client, station loading, power curve logic
+│   ├── lib/           → NOAA client, station loading, CSV loading, power curve logic
 │   └── types/         → TypeScript data contracts
 └── tests/             → planned frontend utility tests
 
@@ -493,6 +521,9 @@ Implements:
 * power curve estimation
 * interactive web UI
 * static artifact consumption
+* historical wind results dashboard
+* ML forecasting dashboard
+* DuckDB vs Spark benchmarking dashboard
 
 Current important website files:
 
@@ -500,10 +531,21 @@ Current important website files:
 website/src/lib/noaaClient.ts
 website/src/lib/powerCurve.ts
 website/src/lib/stationData.ts
+website/src/lib/csv.ts
 website/src/types/station.ts
+
 website/src/components/LiveWindExplorer.tsx
 website/src/components/PowerCurveChart.tsx
+website/src/components/MapPanel.tsx
+website/src/components/WindResultsExplorer.tsx
+website/src/components/ForecastChart.tsx
+website/src/components/MetricCard.tsx
+website/src/components/BenchmarkChart.tsx
+
 website/src/app/live/page.tsx
+website/src/app/results/page.tsx
+website/src/app/forecasting/page.tsx
+website/src/app/benchmarking/page.tsx
 ```
 
 ---
@@ -567,6 +609,24 @@ The live wind explorer is available at:
 
 ```text
 http://localhost:3000/live
+```
+
+The historical wind results dashboard is available at:
+
+```text
+http://localhost:3000/results
+```
+
+The forecasting model dashboard is available at:
+
+```text
+http://localhost:3000/forecasting
+```
+
+The benchmarking dashboard is available at:
+
+```text
+http://localhost:3000/benchmarking
 ```
 
 ---
@@ -689,7 +749,10 @@ The project follows a scalable development pattern.
 6. export analytical artifacts
 7. preserve portable website datasets
 8. build live website features
-9. package for deployment
+9. build historical website dashboards
+10. build forecasting model dashboards
+11. build benchmarking dashboards
+12. package for deployment
 
 ---
 
@@ -710,8 +773,12 @@ raw NOAA ingestion
 → model registry
 → batch inference
 → forecast validation
+→ benchmarking
 → visualization exports
 → website-ready artifact generation
+→ historical dashboard rendering
+→ forecasting dashboard rendering
+→ benchmarking dashboard rendering
 → live NOAA web integration
 ```
 
@@ -812,7 +879,7 @@ Purpose:
 * forecasting aggregates
 * benchmark-ready tables
 
-Gold outputs power downstream analytics, model training, forecast validation, visualization exports, and website-ready artifacts.
+Gold outputs power downstream analytics, model training, forecast validation, visualization exports, benchmark exports, and website-ready artifacts.
 
 ---
 
@@ -833,6 +900,16 @@ normalized between:
 ```
 
 Capacity factor represents estimated normalized wind energy output. A value of 0 means no estimated output, and a value near 1 means rated output.
+
+In the website dashboards, capacity factor is often displayed as a percentage for readability.
+
+Example:
+
+```text
+0.05 = 5% wind potential score
+```
+
+These values should be interpreted as conservative wind-resource estimates derived from weather observations and turbine-inspired logic, not direct measurements of turbine production.
 
 ---
 
@@ -890,6 +967,42 @@ s3a://<user-bucket>/gold/wind/analytics/monthly_state
 ```text
 s3a://<user-bucket>/gold/wind/analytics/extreme_events
 ```
+
+---
+
+## Daily Region Table Used for Website Trends
+
+```text
+s3a://<user-bucket>/gold/wind/region/daily
+```
+
+This table is exported into:
+
+```text
+website/public/data/regional_trends.csv
+website/public/data/seasonal_trends.csv
+website/public/data/monthly_state_trends.csv
+website/public/data/yearly_state_summary.csv
+website/public/data/state_wind_summary.csv
+```
+
+These files power the interactive `/results` dashboard.
+
+---
+
+## Station Daily Table Used for Website Station Summaries
+
+```text
+s3a://<user-bucket>/gold/wind/station/daily
+```
+
+This table is summarized into:
+
+```text
+website/public/data/top_wind_stations.csv
+```
+
+and supports station-level wind-resource analysis on the website.
 
 ---
 
@@ -967,6 +1080,22 @@ final_tuned_gbt
 s3a://<user-bucket>/models/registry/
 ```
 
+The final selected model is registered under:
+
+```text
+s3a://<user-bucket>/models/registry/final_gbt/
+```
+
+Model metadata exported for website/model documentation includes:
+
+```text
+website/public/data/model_pipeline_summary.json
+website/public/data/model_hyperparameters.json
+website/public/data/true_feature_importance.json
+```
+
+These exports preserve model details even when the Spark model registry is not directly available from the deployed website.
+
 ---
 
 # Batch Inference Outputs
@@ -977,6 +1106,14 @@ Forecast outputs stored in:
 s3a://<user-bucket>/forecasts/outputs/
 ```
 
+The final historical forecast export used by the website is preserved in:
+
+```text
+website/public/data/forecast_vs_actual.csv
+```
+
+This file joins model predictions with actual next-day outcomes so the website can evaluate model performance interactively.
+
 ---
 
 # Forecast Validation Metrics
@@ -986,6 +1123,47 @@ s3a://<user-bucket>/forecasts/outputs/
 | MAE    | ~0.0275 |
 | RMSE   | ~0.0455 |
 | Bias   | ~0      |
+
+The website displays these metrics as percentage points of capacity factor:
+
+| Metric | Website Display |
+| ------ | --------------- |
+| RMSE   | ~4.55%          |
+| MAE    | ~2.75%          |
+| Bias   | ~0.02%          |
+
+A near-zero bias indicates that the model is not consistently overpredicting or underpredicting wind potential.
+
+---
+
+# Forecasting Scope
+
+The forecasting dashboard currently shows historical holdout evaluation, not live future forecasting.
+
+The selectable forecast years are:
+
+```text
+2023–2025
+```
+
+These years are used because actual outcomes are already known, allowing direct comparison between:
+
+```text
+prediction
+vs
+actual next-day capacity factor
+```
+
+This supports honest model evaluation using RMSE, MAE, and bias.
+
+Live operational future forecasting is planned for a later inference-service layer and would require:
+
+* future weather inputs
+* NOAA/NWS forecast ingestion
+* feature generation for future timestamps
+* a serving API
+* scheduled inference
+* monitoring and drift checks
 
 ---
 
@@ -1092,6 +1270,20 @@ Key findings:
 * Spark becomes necessary at larger distributed scales
 * warm Spark runs improve performance
 
+The benchmark is not intended to prove Spark is always faster.
+
+Instead, it demonstrates the tradeoff:
+
+```text
+DuckDB → excellent for compact local analytics
+Spark  → appropriate for distributed, partitioned, cloud-scale workloads
+```
+
+This is an important architectural conclusion because the project supports both:
+
+* local development and analysis
+* distributed full-scale processing on EC2/S3
+
 ---
 
 # Benchmark Outputs
@@ -1101,6 +1293,25 @@ outputs/benchmark_results/
 ├── duckdb_benchmarks.csv
 ├── spark_benchmarks.csv
 ├── benchmark_comparison.csv
+└── benchmark_summary.csv
+```
+
+Website-safe benchmark artifacts are preserved in:
+
+```text
+website/public/data/
+├── benchmark_comparison.csv
+├── benchmark_summary.csv
+├── duckdb_benchmarks.csv
+└── spark_benchmarks.csv
+```
+
+Website benchmark figures are preserved in:
+
+```text
+website/public/assets/
+├── benchmark_runtime_by_task.png
+└── benchmark_runtime_ratio.png
 ```
 
 ---
@@ -1125,6 +1336,28 @@ outputs/benchmark_results/
 
 ---
 
+## Forecast vs Actual
+
+![Forecast vs Actual](./outputs/figures/forecast_vs_actual.png)
+
+---
+
+## Benchmark Runtime by Task
+
+```text
+website/public/assets/benchmark_runtime_by_task.png
+```
+
+---
+
+## Spark Runtime Relative to DuckDB
+
+```text
+website/public/assets/benchmark_runtime_ratio.png
+```
+
+---
+
 # Website Artifact Preservation
 
 To ensure the project remains functional even after EC2/S3 expiration, portable frontend-safe artifacts are exported locally.
@@ -1136,17 +1369,28 @@ Current preserved artifacts include:
 ```text
 website/public/data/
 ├── all_pipeline_stations.json
+├── benchmark_comparison.csv
+├── benchmark_summary.csv
+├── duckdb_benchmarks.csv
 ├── feature_importance.json
 ├── forecast_vs_actual.csv
 ├── live_station_api_verification_audit.json
 ├── live_station_list.json
 ├── live_station_mapping_audit.csv
+├── model_hyperparameters.json
 ├── model_metrics.json
+├── model_pipeline_summary.json
+├── monthly_state_trends.csv
 ├── pipeline_summary.json
 ├── regional_trends.csv
 ├── seasonal_trends.csv
+├── spark_benchmarks.csv
+├── state_wind_summary.csv
+├── top_wind_stations.csv
+├── true_feature_importance.json
 ├── us_wind_station_map.csv
-└── verified_live_station_list.json
+├── verified_live_station_list.json
+└── yearly_state_summary.csv
 ```
 
 ---
@@ -1156,6 +1400,8 @@ website/public/data/
 ```text
 website/public/assets/
 ├── airflow_dag_graph_success.png
+├── benchmark_runtime_by_task.png
+├── benchmark_runtime_ratio.png
 ├── forecast_vs_actual.png
 ├── regional_wind_trends.png
 ├── seasonal_trends.png
@@ -1174,6 +1420,295 @@ Validation scripts ensure:
 * frontend datasets remain lightweight
 * portable artifacts remain deployable
 * station artifacts are available for website use
+* forecast evaluation files contain actual and prediction columns
+* benchmark files contain DuckDB and Spark runtime comparisons
+* model metadata files preserve model identity and feature interpretation
+
+---
+
+# Historical Pipeline Dashboard
+
+The website includes a completed historical pipeline dashboard.
+
+Route:
+
+```text
+/results
+```
+
+Implemented files:
+
+```text
+website/src/app/results/page.tsx
+website/src/components/MapPanel.tsx
+website/src/components/WindResultsExplorer.tsx
+website/src/lib/csv.ts
+```
+
+This dashboard demonstrates the value of the Spark historical pipeline through interactive charts and preserved artifacts.
+
+## What the Results Dashboard Shows
+
+The `/results` page displays:
+
+* U.S. wind potential map
+* full 1995–2025 historical state coverage
+* monthly wind profile by state and year
+* 31-year wind potential trend by state
+* strongest long-run wind resource states
+* highest-wind processed weather sites
+* capacity-factor interpretation blocks
+* pipeline coverage summary cards
+
+## Results Dashboard Inputs
+
+```text
+website/public/assets/us_wind_potential_map.png
+website/public/data/pipeline_summary.json
+website/public/data/regional_trends.csv
+website/public/data/seasonal_trends.csv
+website/public/data/monthly_state_trends.csv
+website/public/data/yearly_state_summary.csv
+website/public/data/state_wind_summary.csv
+website/public/data/top_wind_stations.csv
+website/public/data/us_wind_station_map.csv
+```
+
+## What This Dashboard Proves
+
+The results dashboard shows that the Spark pipeline produced reusable analytical artifacts across the full historical window.
+
+It turns distributed batch outputs into a lightweight, deployable, frontend-safe dashboard that remains usable even after EC2 or S3 resources are shut down.
+
+---
+
+# Forecasting Model Dashboard
+
+The website includes a completed forecasting model dashboard.
+
+Route:
+
+```text
+/forecasting
+```
+
+Implemented files:
+
+```text
+website/src/app/forecasting/page.tsx
+website/src/components/ForecastChart.tsx
+website/src/components/MetricCard.tsx
+```
+
+## What the Forecasting Dashboard Shows
+
+The `/forecasting` page displays:
+
+* final selected model name
+* model family
+* RMSE
+* MAE
+* bias
+* evaluation row count
+* target variable
+* coverage window
+* forecast vs actual chart
+* feature importance chart
+* sample prediction table
+* historical holdout interpretation
+* model interpretation notes
+
+## Forecasting Dashboard Inputs
+
+```text
+website/public/data/forecast_vs_actual.csv
+website/public/data/model_metrics.json
+website/public/data/feature_importance.json
+website/public/data/true_feature_importance.json
+website/public/data/model_hyperparameters.json
+website/public/data/model_pipeline_summary.json
+```
+
+## How to Interpret the Forecasting Dashboard
+
+The model predicts:
+
+```text
+next_day_daily_region_capacity_factor
+```
+
+This is a next-day regional wind-potential target.
+
+The dashboard focuses on historical holdout years:
+
+```text
+2023–2025
+```
+
+because actual outcomes are known for those dates.
+
+This allows the website to compare:
+
+```text
+forecast prediction
+vs
+actual observed next-day wind potential
+```
+
+## Forecasting Model Takeaways
+
+Key observations:
+
+* the model tracks normal wind-potential movement reasonably well
+* wind-speed features dominate prediction importance
+* rolling capacity-factor features improve stability
+* largest forecast errors occur during sudden wind spikes
+* near-zero bias means the model is not consistently overpredicting or underpredicting
+
+The model is intentionally presented as historical evaluation rather than live future prediction.
+
+---
+
+# Benchmarking Dashboard
+
+The website includes a completed DuckDB vs Spark benchmarking dashboard.
+
+Route:
+
+```text
+/benchmarking
+```
+
+Implemented files:
+
+```text
+website/src/app/benchmarking/page.tsx
+website/src/components/BenchmarkChart.tsx
+website/src/components/MetricCard.tsx
+website/src/components/MapPanel.tsx
+website/src/lib/csv.ts
+```
+
+## What the Benchmarking Dashboard Shows
+
+The `/benchmarking` page displays:
+
+* DuckDB vs Spark runtime comparison
+* benchmark summary
+* static benchmark runtime figures
+* Spark-to-DuckDB runtime ratio figure
+* interactive benchmark runtime chart
+* interpretation of when DuckDB is useful
+* interpretation of when Spark is justified
+* project-level benchmarking takeaway
+
+## Benchmarking Dashboard Inputs
+
+```text
+website/public/data/benchmark_comparison.csv
+website/public/data/benchmark_summary.csv
+website/public/data/duckdb_benchmarks.csv
+website/public/data/spark_benchmarks.csv
+website/public/assets/benchmark_runtime_by_task.png
+website/public/assets/benchmark_runtime_ratio.png
+```
+
+## Benchmarking Takeaway
+
+DuckDB is excellent for small local analytical workloads and fast iteration.
+
+Spark can be slower on small local data because of scheduling overhead, but it becomes the correct tool when processing:
+
+* multi-year NOAA partitions
+* many states
+* many weather stations
+* large Parquet tables
+* S3-backed distributed data
+* full production-style pipeline workloads
+
+This dashboard explains why both engines exist in the project.
+
+---
+
+# Website Layer 3 Completion
+
+Website Layer 3 is complete.
+
+It includes:
+
+## Part A — Wind Potential Results Page
+
+Route:
+
+```text
+/results
+```
+
+Output:
+
+```text
+Wind results dashboard
+```
+
+Status:
+
+```text
+complete
+```
+
+## Part B — Forecasting Model Page
+
+Route:
+
+```text
+/forecasting
+```
+
+Output:
+
+```text
+ML model results page
+```
+
+Status:
+
+```text
+complete
+```
+
+## Part C — Benchmarking Page
+
+Route:
+
+```text
+/benchmarking
+```
+
+Output:
+
+```text
+Benchmarking dashboard
+```
+
+Status:
+
+```text
+complete
+```
+
+## Layer 3 Completion Criteria
+
+The website now explains and displays pipeline outputs clearly through:
+
+* static artifacts
+* interactive charts
+* preserved CSV/JSON outputs
+* forecasting diagnostics
+* model interpretation
+* benchmark interpretation
+* user-facing explanatory text
+
+Layer 3 transforms the repository from a backend-heavy pipeline into a complete historical analytics platform demonstration.
 
 ---
 
@@ -1315,14 +1850,19 @@ The website preserves model and forecast outputs from the pipeline:
 website/public/data/forecast_vs_actual.csv
 website/public/data/model_metrics.json
 website/public/data/feature_importance.json
+website/public/data/true_feature_importance.json
+website/public/data/model_hyperparameters.json
+website/public/data/model_pipeline_summary.json
 ```
 
-These artifacts support planned or current website sections for:
+These artifacts support website sections for:
 
 * forecast validation
 * model performance
 * feature importance
 * forecasting results
+* model metadata preservation
+* model interpretability
 
 ---
 
@@ -1333,6 +1873,10 @@ The website preserves analytical exports:
 ```text
 website/public/data/regional_trends.csv
 website/public/data/seasonal_trends.csv
+website/public/data/monthly_state_trends.csv
+website/public/data/yearly_state_summary.csv
+website/public/data/state_wind_summary.csv
+website/public/data/top_wind_stations.csv
 website/public/data/us_wind_station_map.csv
 ```
 
@@ -1340,13 +1884,36 @@ These support website sections for:
 
 * regional wind trends
 * seasonal capacity factor patterns
+* monthly wind profiles
+* state-level long-run wind summaries
+* station-level wind potential summaries
 * station-level wind potential maps
 
 ---
 
-## 7. Static Figures
+## 7. Benchmark Artifacts
 
-The website also uses pipeline-generated figures:
+The website preserves benchmark outputs:
+
+```text
+website/public/data/benchmark_comparison.csv
+website/public/data/benchmark_summary.csv
+website/public/data/duckdb_benchmarks.csv
+website/public/data/spark_benchmarks.csv
+```
+
+These support website sections for:
+
+* DuckDB vs Spark runtime comparison
+* benchmark summary
+* cross-engine interpretation
+* analytical engine tradeoff explanation
+
+---
+
+## 8. Static Figures
+
+The website also uses pipeline-generated or notebook-generated figures:
 
 ```text
 website/public/assets/forecast_vs_actual.png
@@ -1354,9 +1921,11 @@ website/public/assets/regional_wind_trends.png
 website/public/assets/seasonal_trends.png
 website/public/assets/us_wind_potential_map.png
 website/public/assets/airflow_dag_graph_success.png
+website/public/assets/benchmark_runtime_by_task.png
+website/public/assets/benchmark_runtime_ratio.png
 ```
 
-These are generated from the analysis and visualization layers, then copied into frontend-safe static assets.
+These are generated from the analysis, visualization, and benchmarking layers, then copied into frontend-safe static assets.
 
 ---
 
@@ -1436,6 +2005,8 @@ The pipeline provides:
 * map artifacts
 * model metrics
 * forecast validation artifacts
+* benchmark artifacts
+* dashboard-ready summaries
 
 The website combines both systems:
 
@@ -1458,6 +2029,7 @@ The live estimator is not yet:
 * real-time feature engineering
 * streaming prediction
 * deployed backend ML inference
+* future-date operational forecasting
 
 Those are planned for the future model service layer.
 
@@ -1482,6 +2054,14 @@ Test suite location:
 tests/
 ```
 
+Website validation commands:
+
+```bash
+cd website
+npx tsc --noEmit
+npm run build
+```
+
 ---
 
 # Current Website Platform Work
@@ -1498,14 +2078,20 @@ Current website capabilities include:
 * browser-side power curve estimation
 * live station search and filtering
 * fallback state for NOAA API failures
+* historical wind results dashboard
+* forecasting model evaluation dashboard
+* DuckDB vs Spark benchmarking dashboard
+* dashboard interpretation blocks
+* static and interactive artifact display
 
 Planned capabilities include:
 
-* interactive forecasting dashboards
-* pipeline storytelling pages
-* benchmark visualizations
 * deployable ML inference
+* production forecasting API
+* future-date prediction workflow
+* backend model service
 * public cloud deployment
+* monitoring and model drift documentation
 
 ---
 
@@ -1517,6 +2103,7 @@ Planned capabilities include:
 * TypeScript
 * Tailwind CSS
 * Plotly / Chart.js
+* Recharts
 
 ---
 
@@ -1549,6 +2136,20 @@ Precomputed artifacts exported from Spark:
 * benchmark outputs
 * visualizations
 * station metadata
+
+from
+
+## Historical Forecast Evaluation
+
+Model predictions joined with actual outcomes:
+
+* forecast vs actual
+* RMSE
+* MAE
+* bias
+* feature importance
+* sample prediction rows
+* holdout-year interpretation
 
 from
 
@@ -1587,6 +2188,9 @@ Core project rules:
 * validation occurs before scaling
 * portable artifacts should outlive cloud infrastructure
 * website data must be lightweight and deployable
+* historical dashboards must use preserved artifacts
+* forecast dashboards must distinguish evaluation from future prediction
+* benchmark dashboards must explain engine tradeoffs honestly
 * live claims must be technically honest
 
 ---
@@ -1604,6 +2208,9 @@ This project demonstrates:
 * reproducible infrastructure
 * analytical visualization
 * website-ready artifact preservation
+* historical pipeline dashboards
+* forecasting model dashboards
+* benchmark dashboards
 * nationwide live NOAA station integration
 * live physics-based wind estimation
 * production-style packaging
@@ -1622,3 +2229,5 @@ This project demonstrates:
 * live forecasting interfaces
 * production deployment
 * technical portfolio demonstrations
+* MLOps-style inference service extension
+* production forecasting infrastructure
