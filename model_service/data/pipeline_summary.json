@@ -1,0 +1,17 @@
+{
+  "historical_window": {
+    "start_year": 1995,
+    "end_year": 2025
+  },
+  "coverage": {
+    "states": 48,
+    "daily_region_rows": 537449,
+    "station_daily_rows": 19430672,
+    "top_station_export_rows": 250
+  },
+  "source_tables": {
+    "region_daily": "s3a://syed-datsbd-s2026/gold/wind/region/daily",
+    "region_monthly": "s3a://syed-datsbd-s2026/gold/wind/region/monthly",
+    "station_daily": "s3a://syed-datsbd-s2026/gold/wind/station/daily"
+  }
+}

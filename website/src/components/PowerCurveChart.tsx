@@ -129,7 +129,16 @@ export default function PowerCurveChart({ windSpeedMs }: PowerCurveChartProps) {
           {formatCapacityFactor(current.capacityFactor)}
         </p>
         <p className="text-sm text-slate-400">
-          Operating region: <span className="text-slate-200">{current.operatingRegion}</span>
+          {current.operatingRegion === "below_cut_in" ? (
+            "Wind speed below turbine operating threshold."
+          ) : (
+            <>
+              Operating region:{" "}
+              <span className="text-slate-200">
+                {current.operatingRegion}
+              </span>
+            </>
+          )}
         </p>
       </div>
     </div>
