@@ -1,0 +1,4 @@
+task_name,dataset_scale,duckdb,spark,spark_to_duckdb_runtime_ratio,faster_engine
+daily_region_aggregation,small,0.3897759119669596,1.6609930992126465,4.261405202878327,duckdb
+filter_year_region,small,0.1265963713328043,3.133143345514933,24.7490770274792,duckdb
+grouped_temporal_summaries,small,0.3240963617960612,1.045301119486491,3.225278783426302,duckdb
