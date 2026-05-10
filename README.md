@@ -7,7 +7,7 @@
 [![DuckDB](https://img.shields.io/badge/DuckDB-Benchmarking-lightgrey)]()
 [![Next.js](https://img.shields.io/badge/Next.js-Live%20Website-black)]()
 [![NOAA](https://img.shields.io/badge/NOAA-Live%20Weather%20API-blue)]()
-[![FastAPI](https://img.shields.io/badge/FastAPI-Planned%20Inference-green)]()
+[![FastAPI](https://img.shields.io/badge/FastAPI-Live%20Analysis%20Service-green)]()
 [![Status](https://img.shields.io/badge/Status-Active-success)]()
 
 A production-style renewable energy forecasting platform built on NOAA Integrated Surface Database (ISD) data.
@@ -26,6 +26,8 @@ This project combines:
 - interactive forecasting model diagnostics
 - DuckDB vs Spark benchmark dashboards
 - live NOAA-powered wind estimation
+- deployable FastAPI live analysis service
+- portable backend architecture using preserved Spark artifacts
 - and a portfolio-grade web platform for demonstrating both historical analytics and live wind potential
 
 The platform was designed to simulate a realistic end-to-end data + ML system capable of operating across local development, distributed cloud infrastructure, orchestration workflows, and deployable analytics interfaces.
@@ -50,6 +52,9 @@ The primary goals of this project are:
 - build forecasting model evaluation dashboards from preserved model outputs
 - build benchmarking dashboards from DuckDB and Spark runtime comparisons
 - build a live web interface using current NOAA/NWS observations
+- build a deployable FastAPI live analysis backend
+- combine live NOAA observations with preserved Spark artifacts
+- support portable non-Spark deployment after EC2/S3 expiration
 - package the entire system into a deployable portfolio-grade product
 
 ---
@@ -92,8 +97,11 @@ N --> F
 N --> H
 
 P["NOAA/NWS Live API"] --> Q["Live Wind Explorer<br/>/live"]
-W2 --> Q
-Q --> R["Live Capacity Factor Estimate"]
+Q --> R["Power Curve Estimation"]
+
+W2 --> S["Portable FastAPI Live Analysis Service"]
+P --> S
+S --> T["Live Wind Outlook<br/>Historical Context + 24h Outlook"]
 ```
 
 ---
@@ -306,11 +314,15 @@ rather than exhaustive coverage of every NOAA field.
 
 ---
 
-## Planned Backend Inference Service
+## Portable Backend Analysis Service
 
 * FastAPI
-* XGBoost portable inference
-* model service deployment
+* live NOAA observation ingestion
+* portable backend architecture using preserved Spark artifacts
+* historical contextualization service
+* turbine-inspired live capacity-factor estimation
+* next-24-hour outlook estimation
+* deployable backend service
 * Render / Railway / Fly.io
 
 ---
@@ -337,6 +349,11 @@ scripts/               → runnable orchestration + ETL + export scripts
 src/                   → core pipeline source code
 tests/                 → validation + unit tests
 website_data/          → exported website-ready datasets
+
+model_service/
+├── app/               → FastAPI backend service
+├── data/              → portable preserved backend artifacts
+└── tests/             → backend validation tests
 
 website/
 ├── public/
@@ -519,6 +536,9 @@ Implements:
 * station data loading
 * live observation fetching
 * power curve estimation
+* portable FastAPI live analysis integration
+* live wind outlook estimation
+* historical contextualization
 * interactive web UI
 * static artifact consumption
 * historical wind results dashboard
@@ -662,6 +682,49 @@ Final verification workflow:
 ```bash
 npx tsc --noEmit
 npm run build
+```
+
+---
+
+# Portable Backend Service Setup
+
+The project includes a deployable FastAPI backend service for live wind analysis.
+
+Location:
+
+```text
+model_service/
+```
+
+## Backend Service Features
+
+The service provides:
+
+* live NOAA/NWS observation ingestion
+* turbine-inspired capacity-factor estimation
+* historical contextualization using preserved Spark artifacts
+* next-24-hour outlook estimation
+* validated live station enforcement
+* portable deployment without Spark runtime dependencies
+
+## Run Backend Service
+
+From repository root:
+
+```bash
+uvicorn model_service.app.main:app --reload --port 8000
+```
+
+Backend Swagger UI:
+
+```text
+http://127.0.0.1:8000/docs
+```
+
+## Backend Environment Variables
+
+```bash
+export FRONTEND_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
 ```
 
 ---
@@ -1156,14 +1219,18 @@ actual next-day capacity factor
 
 This supports honest model evaluation using RMSE, MAE, and bias.
 
-Live operational future forecasting is planned for a later inference-service layer and would require:
+The project now includes a deployable portable FastAPI live analysis service.
 
-* future weather inputs
-* NOAA/NWS forecast ingestion
-* feature generation for future timestamps
-* a serving API
-* scheduled inference
-* monitoring and drift checks
+The live backend currently performs:
+
+* live NOAA observation ingestion
+* turbine-inspired live capacity-factor estimation
+* historical contextualization from preserved Spark artifacts
+* next-24-hour outlook estimation
+
+The service intentionally does not claim live Spark ML inference.
+
+True operational future forecasting would still require:
 
 ---
 
@@ -1630,9 +1697,9 @@ This dashboard explains why both engines exist in the project.
 
 ---
 
-# Website Layer 3 Completion
+# Website Layer 4 Completion
 
-Website Layer 3 is complete.
+Website Layer 4 is complete.
 
 It includes:
 
@@ -1642,7 +1709,7 @@ Route:
 
 ```text
 /results
-```
+````
 
 Output:
 
@@ -1696,9 +1763,29 @@ Status:
 complete
 ```
 
-## Layer 3 Completion Criteria
+## Part D — Portable Live Analysis Service
 
-The website now explains and displays pipeline outputs clearly through:
+Route:
+
+```text
+/live
+```
+
+Output:
+
+```text
+Deployable live wind outlook backend service
+```
+
+Status:
+
+```text
+complete
+```
+
+## Layer 4 Completion Criteria
+
+The website and backend now explain, display, and serve project outputs through:
 
 * static artifacts
 * interactive charts
@@ -1706,9 +1793,13 @@ The website now explains and displays pipeline outputs clearly through:
 * forecasting diagnostics
 * model interpretation
 * benchmark interpretation
+* live NOAA observations
+* FastAPI backend analysis service
+* live wind outlook estimation
+* historical contextualization
 * user-facing explanatory text
 
-Layer 3 transforms the repository from a backend-heavy pipeline into a complete historical analytics platform demonstration.
+Layer 4 extends the project into a deployable live analysis platform with portable backend infrastructure.
 
 ---
 
@@ -1953,7 +2044,7 @@ website/src/types/station.ts
 
 ---
 
-## What the Live Estimator Does
+## What The Live Estimator And Backend Service Are Not Yet
 
 The live estimator:
 
@@ -2031,9 +2122,96 @@ The live estimator is not yet:
 * deployed backend ML inference
 * future-date operational forecasting
 
-Those are planned for the future model service layer.
+The project now includes a deployable backend analysis service, but it intentionally avoids claiming live Spark ML inference.
 
-The current live feature is a real-time physics-based wind potential estimator using live NOAA observations and the project’s turbine power-curve methodology.
+The current live platform combines:
+
+* real-time NOAA observations
+* turbine-inspired power-curve estimation
+* preserved Spark pipeline artifacts
+* deployable FastAPI backend services
+* historical contextualization
+* next-24-hour outlook estimation
+
+---
+
+# Portable FastAPI Live Analysis Service
+
+The project includes a deployable backend service for live wind analysis.
+
+Route integration:
+
+```text
+/live
+```
+
+Backend service location:
+
+```text
+model_service/
+```
+
+Implemented backend files:
+
+```text
+model_service/app/main.py
+model_service/app/noaa_client.py
+model_service/app/live_analyzer.py
+model_service/app/power_curve.py
+model_service/app/artifact_loader.py
+model_service/app/schemas.py
+```
+
+## What the Backend Service Does
+
+The backend service:
+
+1. validates live station IDs against preserved verified station artifacts
+2. fetches live NOAA/NWS observations
+3. extracts:
+
+   * live wind speed
+   * live wind direction
+   * live temperature
+   * observation timestamp
+4. converts wind speed into estimated live capacity factor
+5. compares current conditions against historical Spark artifact summaries
+6. estimates a next-24-hour outlook range
+7. returns deployable JSON API responses
+8. supports frontend integration through FastAPI endpoints
+9. supports portable deployment without Spark runtime dependencies
+
+## Backend Service Endpoints
+
+```text
+GET  /health
+GET  /metrics
+GET  /stations
+POST /analyze-live
+```
+
+## What the Backend Service Is
+
+The backend service is:
+
+* deployable
+* portable
+* frontend-compatible
+* artifact-driven
+* infrastructure-independent
+* technically honest about live inference limitations
+
+## What the Backend Service Is Not
+
+The backend service is not:
+
+* live Spark inference
+* real-time feature engineering
+* streaming ML prediction
+* future-weather operational forecasting
+* retrained portable XGBoost inference
+
+The backend intentionally avoids making misleading live-ML claims while still demonstrating realistic deployment architecture.
 
 ---
 
@@ -2068,7 +2246,7 @@ npm run build
 
 The project is currently being extended into a live portfolio-grade forecasting platform.
 
-Current website capabilities include:
+Current website and backend capabilities include:
 
 * Next.js application setup
 * static asset preservation
@@ -2076,6 +2254,10 @@ Current website capabilities include:
 * verified nationwide live station list
 * live NOAA observation fetcher
 * browser-side power curve estimation
+* FastAPI portable backend service
+* live wind outlook estimation
+* backend historical contextualization
+* deployable backend API architecture
 * live station search and filtering
 * fallback state for NOAA API failures
 * historical wind results dashboard
@@ -2110,8 +2292,10 @@ Planned capabilities include:
 ## Backend
 
 * FastAPI
-* XGBoost portable inference
 * NOAA Weather API integration
+* portable backend analysis service
+* preserved Spark artifact contextualization
+* deployable live wind outlook service
 
 ---
 
@@ -2153,15 +2337,16 @@ Model predictions joined with actual outcomes:
 
 from
 
-## Live Wind Estimation
+## Live Wind Estimation And Outlook Service
 
 Real-time NOAA weather observations combined with:
 
 * turbine-inspired power curve logic
 * verified station mappings
-* optional deployable ML inference in the future
-
-This ensures the platform remains functional even if EC2/S3 infrastructure expires.
+* preserved Spark pipeline artifacts
+* deployable FastAPI backend analysis service
+* historical contextualization
+* next-24-hour outlook estimation
 
 ---
 
@@ -2213,6 +2398,10 @@ This project demonstrates:
 * benchmark dashboards
 * nationwide live NOAA station integration
 * live physics-based wind estimation
+* deployable FastAPI backend service
+* portable backend architecture
+* live wind outlook estimation
+* historical contextualization from preserved Spark artifacts
 * production-style packaging
 * deployable forecasting platform design
 
@@ -2227,6 +2416,9 @@ This project demonstrates:
 * ML engineering workflows
 * analytical dashboards
 * live forecasting interfaces
+* deployable FastAPI services
+* portable analytics backends
+* live environmental analytics APIs
 * production deployment
 * technical portfolio demonstrations
 * MLOps-style inference service extension
