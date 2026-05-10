@@ -34,7 +34,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-noaa = NOAAClient()
+noaa = NOAAClient(user_agent=os.environ.get("NOAA_USER_AGENT", "wind-energy-forecasting-platform/1.0"))
 
 
 @app.get("/health")
