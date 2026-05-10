@@ -189,34 +189,26 @@ export default function LiveWindExplorer() {
 
     if (!hasMounted) {
         return (
-            <section className="mx-auto max-w-7xl px-6 py-10">
-                <div className="mb-8">
-                    <p className="text-sm font-semibold uppercase tracking-[0.3em] text-sky-400">
-                        Live NOAA Wind Explorer
-                    </p>
-                    <h1 className="mt-3 text-4xl font-bold tracking-tight text-white md:text-5xl">
-                        Live wind potential estimation across verified NOAA stations
-                    </h1>
-                    <p className="mt-4 max-w-3xl text-base leading-7 text-slate-300">
-                        Loading verified station explorer...
-                    </p>
-                </div>
+            <section className="rounded-3xl border border-slate-800 bg-slate-900 p-6">
+                <p className="text-sm text-slate-400">Loading verified station explorer...</p>
             </section>
         );
     }
 
     return (
-        <section className="mx-auto max-w-7xl px-6 py-10">
-            <div className="mb-8">
-                <p className="text-sm font-semibold uppercase tracking-[0.3em] text-sky-400">
-                    Live NOAA Wind Explorer
+        <section className="rounded-3xl border border-slate-800 bg-slate-900 p-6 shadow-xl">
+            <div className="mb-6">
+                <p className="text-sm font-semibold uppercase tracking-wide text-cyan-300">
+                    Station Explorer
                 </p>
-                <h1 className="mt-3 text-4xl font-bold tracking-tight text-white md:text-5xl">
-                    Live wind potential estimation across verified NOAA stations
-                </h1>
-                <p className="mt-4 max-w-3xl text-base leading-7 text-slate-300">
-                    Search a verified station, fetch the latest NOAA observation, and estimate wind energy
-                    potential with a turbine power curve.
+
+                <h2 className="mt-2 text-2xl font-bold text-white">
+                    Live NOAA wind potential estimate
+                </h2>
+
+                <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-300">
+                    Search a verified station, fetch the latest NOAA observation, and estimate
+                    current wind potential using the project power-curve logic.
                 </p>
             </div>
 
@@ -227,6 +219,7 @@ export default function LiveWindExplorer() {
                             <label className="mb-2 block text-sm font-medium text-slate-300">
                                 State filter
                             </label>
+
                             <select
                                 value={selectedState}
                                 onChange={(event) => {
@@ -236,7 +229,7 @@ export default function LiveWindExplorer() {
                                     setObservation(null);
                                     setStatus("idle");
                                 }}
-                                className="w-full rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 text-white outline-none focus:border-sky-400"
+                                className="w-full rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 text-white outline-none focus:border-cyan-400"
                             >
                                 <option value="ALL">All states</option>
                                 {states.map((state) => (
@@ -251,6 +244,7 @@ export default function LiveWindExplorer() {
                             <label className="mb-2 block text-sm font-medium text-slate-300">
                                 Verified live station
                             </label>
+
                             <input
                                 value={stationQuery}
                                 onChange={(event) => {
@@ -260,7 +254,7 @@ export default function LiveWindExplorer() {
                                     setStatus("idle");
                                 }}
                                 placeholder="Search station code, name, or state..."
-                                className="w-full rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 text-white outline-none placeholder:text-slate-500 focus:border-sky-400"
+                                className="w-full rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 text-white outline-none placeholder:text-slate-500 focus:border-cyan-400"
                             />
 
                             <div className="mt-2 max-h-64 overflow-y-auto rounded-xl border border-slate-800 bg-slate-900">
@@ -275,8 +269,8 @@ export default function LiveWindExplorer() {
                                             type="button"
                                             onClick={() => selectStation(station)}
                                             className={`block w-full border-b border-slate-800 px-3 py-2 text-left text-sm transition last:border-b-0 hover:bg-slate-800 ${selectedStationId === station.nws_station_id
-                                                ? "bg-sky-950/50 text-sky-200"
-                                                : "text-slate-300"
+                                                    ? "bg-cyan-950/50 text-cyan-200"
+                                                    : "text-slate-300"
                                                 }`}
                                         >
                                             <span className="font-semibold">{station.nws_station_id}</span>
@@ -298,7 +292,7 @@ export default function LiveWindExplorer() {
                         <button
                             onClick={handleFetchObservation}
                             disabled={!selectedStation || status === "loading"}
-                            className="w-full rounded-xl bg-sky-500 px-4 py-3 font-semibold text-slate-950 transition hover:bg-sky-400 disabled:cursor-not-allowed disabled:opacity-50"
+                            className="w-full rounded-xl bg-cyan-400 px-4 py-3 font-semibold text-slate-950 transition hover:bg-cyan-300 disabled:cursor-not-allowed disabled:opacity-50"
                         >
                             {status === "loading" ? "Fetching NOAA observation..." : "Fetch live observation"}
                         </button>
@@ -314,16 +308,20 @@ export default function LiveWindExplorer() {
                                 <p className="font-semibold text-white">
                                     {selectedStation.nws_station_id} · {getStationName(selectedStation)}
                                 </p>
+
                                 <p>
                                     {selectedStation.state} · {selectedStation.latitude.toFixed(3)},{" "}
                                     {selectedStation.longitude.toFixed(3)}
                                 </p>
+
                                 <p className="mt-2 text-slate-400">
                                     Pipeline station ID: {selectedStation.isd_station_id ?? "N/A"}
                                 </p>
+
                                 {selectedStation.avg_wind_speed_ms !== undefined && (
                                     <p className="text-slate-400">
-                                        Historical avg wind speed: {selectedStation.avg_wind_speed_ms.toFixed(2)} m/s
+                                        Historical avg wind speed:{" "}
+                                        {selectedStation.avg_wind_speed_ms.toFixed(2)} m/s
                                     </p>
                                 )}
                             </div>
@@ -342,6 +340,7 @@ export default function LiveWindExplorer() {
                             }
                             helper="NOAA observation"
                         />
+
                         <MetricCard
                             label="Wind direction"
                             value={
@@ -352,6 +351,7 @@ export default function LiveWindExplorer() {
                             }
                             helper="Clockwise from north"
                         />
+
                         <MetricCard
                             label="Temperature"
                             value={
@@ -361,10 +361,15 @@ export default function LiveWindExplorer() {
                             }
                             helper="NOAA observation"
                         />
+
                         <MetricCard
                             label="Estimated capacity factor"
                             value={formatCapacityFactor(capacity.capacityFactor)}
-                            helper="Power curve estimate"
+                            helper={
+                                capacity.capacityFactor === 0
+                                    ? "Below turbine cut-in or above cut-out"
+                                    : "Power curve estimate"
+                            }
                         />
                     </div>
 
@@ -372,13 +377,14 @@ export default function LiveWindExplorer() {
 
                     <div className="rounded-2xl border border-slate-800 bg-slate-950 p-5">
                         <h3 className="text-lg font-semibold text-white">How to read this</h3>
+
                         <p className="mt-3 text-sm leading-6 text-slate-300">
-                            The blue curve is the turbine power curve. The green dot is the selected station’s
-                            latest wind speed. Below 3 m/s, estimated output is 0%. From 3–12 m/s, output ramps
-                            up. From 12–25 m/s, output is rated. Above 25 m/s, the turbine cuts out to protect
-                            equipment in extreme wind.
+                            The curve shows estimated wind output by wind speed. Below 3 m/s,
+                            output is 0%. From 3–12 m/s, output ramps up. From 12–25 m/s,
+                            output is rated. Above 25 m/s, the turbine cuts out for protection.
                         </p>
-                        <p className="mt-3 text-sm text-sky-300">
+
+                        <p className="mt-3 text-sm text-cyan-300">
                             Current status:{" "}
                             {getOperatingExplanation(observation?.windSpeedMs, capacity.capacityFactor)}
                         </p>
@@ -386,6 +392,7 @@ export default function LiveWindExplorer() {
 
                     <div className="rounded-2xl border border-slate-800 bg-slate-950 p-5">
                         <h3 className="text-lg font-semibold text-white">Observation metadata</h3>
+
                         <div className="mt-4 grid gap-2 text-sm text-slate-300 md:grid-cols-2">
                             <p>
                                 Request status:{" "}
@@ -393,22 +400,30 @@ export default function LiveWindExplorer() {
                                     {status === "fallback" ? "NOAA API unavailable" : status}
                                 </span>
                             </p>
+
                             <p>
                                 Source: <span className="text-white">{observation?.rawSource ?? "N/A"}</span>
                             </p>
+
                             <p>
                                 Observation time in your timezone:{" "}
                                 <span className="text-white">
                                     {formatBrowserLocalTimestamp(observation?.timestamp)}
                                 </span>
                             </p>
+
                             <p>
                                 Observation age:{" "}
-                                <span className="text-white">{formatObservationAge(observation?.timestamp)}</span>
+                                <span className="text-white">
+                                    {formatObservationAge(observation?.timestamp)}
+                                </span>
                             </p>
+
                             <p>
                                 Original NOAA UTC timestamp:{" "}
-                                <span className="text-white">{formatUtcTimestamp(observation?.timestamp)}</span>
+                                <span className="text-white">
+                                    {formatUtcTimestamp(observation?.timestamp)}
+                                </span>
                             </p>
                         </div>
                     </div>
